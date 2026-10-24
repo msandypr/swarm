@@ -249,10 +249,6 @@
             </button>
           </div>
 
-          <div class="install-status-note">
-            <span>Ekstensi otomatis terhubung ke Swarm tanpa token &middot; Langsung aktif permanen.</span>
-          </div>
-
           <div class="modal-actions">
             <button type="button" class="btn-secondary" id="btn-close-browsers">Selesai</button>
           </div>
@@ -276,6 +272,55 @@
             <button type="button" class="btn-secondary" id="btn-close-about">OK</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal: Delete Confirmation -->
+    <div class="modal-backdrop" id="modal-delete">
+      <div class="modal-box compact-modal">
+        <div class="modal-titlebar">
+          <span>Delete Download</span>
+          <button class="btn-close" id="btn-close-delete-dialog">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc" id="delete-confirm-text">
+            Remove this download from the list?
+          </p>
+          <label class="checkbox-row">
+            <input type="checkbox" id="check-delete-file" checked />
+            <span>Also delete downloaded file from disk</span>
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="btn-cancel-delete">Cancel</button>
+            <button type="button" class="btn-danger" id="btn-confirm-delete">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Desktop Context Menu -->
+    <div class="context-menu" id="context-menu">
+      <div class="menu-item" id="ctx-resume">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        <span>Resume</span>
+      </div>
+      <div class="menu-item" id="ctx-pause">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>
+        <span>Pause</span>
+      </div>
+      <div class="menu-separator"></div>
+      <div class="menu-item" id="ctx-open-folder">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Open Folder</span>
+      </div>
+      <div class="menu-item" id="ctx-copy-link">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span>Copy Download Link</span>
+      </div>
+      <div class="menu-separator"></div>
+      <div class="menu-item danger" id="ctx-delete">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+        <span>Delete</span>
       </div>
     </div>
   </div>

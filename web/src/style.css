@@ -767,3 +767,79 @@ input:focus, select:focus, textarea:focus {
   margin-bottom: 6px;
   letter-spacing: 0.3px;
 }
+
+/* Custom Desktop Context Menu */
+.context-menu {
+  position: fixed;
+  background-color: #1a1b20;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-xs);
+  padding: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  display: none;
+  flex-direction: column;
+  min-width: 160px;
+  z-index: 1000;
+}
+
+.context-menu.open {
+  display: flex;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  font-size: 11.5px;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.menu-item svg {
+  color: var(--text-secondary);
+}
+
+.menu-item.danger {
+  color: var(--status-error);
+}
+
+.menu-item.danger svg {
+  color: var(--status-error);
+}
+
+.menu-separator {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: 3px 0;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin: 6px 0;
+}
+
+.btn-danger {
+  background-color: #dc2626;
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background-color: #ef4444;
+}

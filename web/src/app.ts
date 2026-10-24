@@ -38,7 +38,37 @@ let selectedId: string | null = null;
 let currentCategory: CategoryType = 'all';
 let authToken: string = '';
 let activePort: number = 52417;
+let targetDeleteId: string | null = null;
 
+function openDeleteModal(id: string) {
+  targetDeleteId = id;
+  const item = downloads.get(id);
+  const modalDelete = document.getElementById('modal-delete');
+  const confirmText = document.getElementById('delete-confirm-text');
+  if (confirmText && item) {
+    confirmText.textContent = `Are you sure you want to remove "${item.filename || 'this item'}" from the queue?`;
+  }
+  modalDelete?.classList.add('open');
+}
+
+function closeDeleteModal() {
+  const modalDelete = document.getElementById('modal-delete');
+  modalDelete?.classList.remove('open');
+  targetDeleteId = null;
+}
+
+async function openDownloadFolder(id: string) {
+  try {
+    const headers: Record<string, string> = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    await fetch(`/api/downloads/${id}/open-folder`, {
+      method: 'POST',
+      headers,
+    });
+  } catch (err) {
+    console.error('Failed to open folder:', err);
+  }
+}
 function init() {
   extractToken();
   setupEventListeners();
@@ -113,10 +143,65 @@ function setupEventListeners() {
 
   document.getElementById('btn-delete')?.addEventListener('click', () => {
     if (selectedId) {
-      if (confirm('Delete this download?')) {
-        deleteDownload(selectedId, true);
+      openDeleteModal(selectedId);
+    }
+  });
+
+  // Delete Dialog Handlers
+  document.getElementById('btn-close-delete-dialog')?.addEventListener('click', closeDeleteModal);
+  document.getElementById('btn-cancel-delete')?.addEventListener('click', closeDeleteModal);
+  document.getElementById('btn-confirm-delete')?.addEventListener('click', () => {
+    if (targetDeleteId) {
+      const checkFile = document.getElementById('check-delete-file') as HTMLInputElement | null;
+      const deleteFile = checkFile ? checkFile.checked : false;
+      deleteDownload(targetDeleteId, deleteFile);
+      closeDeleteModal();
+    }
+  });
+
+  // Context Menu Actions
+  document.getElementById('ctx-resume')?.addEventListener('click', () => {
+    if (selectedId) triggerAction(selectedId, 'resume');
+    document.getElementById('context-menu')?.classList.remove('open');
+  });
+
+  document.getElementById('ctx-pause')?.addEventListener('click', () => {
+    if (selectedId) triggerAction(selectedId, 'pause');
+    document.getElementById('context-menu')?.classList.remove('open');
+  });
+
+  document.getElementById('ctx-open-folder')?.addEventListener('click', () => {
+    if (selectedId) openDownloadFolder(selectedId);
+    document.getElementById('context-menu')?.classList.remove('open');
+  });
+
+  document.getElementById('ctx-copy-link')?.addEventListener('click', () => {
+    if (selectedId) {
+      const item = downloads.get(selectedId);
+      if (item && item.url) {
+        navigator.clipboard.writeText(item.url);
       }
     }
+    document.getElementById('context-menu')?.classList.remove('open');
+  });
+
+  document.getElementById('ctx-delete')?.addEventListener('click', () => {
+    if (selectedId) openDeleteModal(selectedId);
+    document.getElementById('context-menu')?.classList.remove('open');
+  });
+
+  // Global Right-Click Prevention (Zero Browser Feel)
+  document.addEventListener('contextmenu', (e) => {
+    const target = e.target as HTMLElement;
+    if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') {
+      return; // Allow native copy/paste inside input fields
+    }
+    e.preventDefault();
+  });
+
+  // Click anywhere to dismiss context menu
+  document.addEventListener('click', () => {
+    document.getElementById('context-menu')?.classList.remove('open');
   });
 
   // Browsers Dialog
@@ -375,6 +460,26 @@ function renderTable() {
         tr.classList.add('selected');
         selectedId = item.id;
         updateSelectionButtons();
+      });
+
+      tr.addEventListener('dblclick', () => {
+        openDownloadFolder(item.id);
+      });
+
+      tr.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        selectedId = item.id;
+        document.querySelectorAll('.data-row').forEach((r) => r.classList.remove('selected'));
+        tr.classList.add('selected');
+        updateSelectionButtons();
+
+        const ctx = document.getElementById('context-menu');
+        if (ctx) {
+          ctx.style.left = `${e.clientX}px`;
+          ctx.style.top = `${e.clientY}px`;
+          ctx.classList.add('open');
+        }
       });
 
       tr.innerHTML = getRowHtml(item);

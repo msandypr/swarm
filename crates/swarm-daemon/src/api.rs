@@ -45,6 +45,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/ext/launch-browser", post(handle_launch_browser))
         .route("/ext/install", post(handle_one_click_install))
         .route("/downloads/:id", patch(handle_action).delete(handle_delete))
+        .route("/downloads/:id/open-folder", post(handle_open_download_folder))
         .route("/events", get(handle_events))
         .layer(middleware::from_fn_with_state(
             state.clone(),
@@ -156,10 +157,16 @@ async fn handle_open_extension_folder() -> impl IntoResponse {
     }
 
     if ext_dir.exists() {
-        if let Ok(canonical) = ext_dir.canonicalize() {
-            crate::tray::open_folder_in_explorer(&canonical.to_string_lossy());
-            return Json(serde_json::json!({ "success": true, "path": canonical.to_string_lossy() }));
-        }
+        let abs_path = ext_dir
+            .canonicalize()
+            .map(|p| {
+                let s = p.to_string_lossy().to_string();
+                s.strip_prefix(r"\\?\").unwrap_or(&s).to_string()
+            })
+            .unwrap_or_else(|_| ext_dir.to_string_lossy().to_string());
+
+        crate::tray::open_folder_in_explorer(&abs_path);
+        return Json(serde_json::json!({ "success": true, "path": abs_path }));
     }
 
     Json(serde_json::json!({ "success": false, "error": "Folder not found" }))
@@ -204,6 +211,23 @@ async fn handle_one_click_install(
         Ok(msg) => Json(serde_json::json!({ "success": true, "message": msg })),
         Err(err) => Json(serde_json::json!({ "success": false, "error": err })),
     }
+}
+
+async fn handle_open_download_folder(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    let list = state.queue.list_downloads().await;
+    if let Some(item) = list.iter().find(|d| d.id == id) {
+        if !item.output_path.is_empty() {
+            let path = std::path::Path::new(&item.output_path);
+            let folder = path.parent().unwrap_or(path);
+            crate::tray::open_folder_in_explorer(&folder.to_string_lossy());
+            return Json(serde_json::json!({ "success": true }));
+        }
+    }
+    crate::tray::open_downloads_folder();
+    Json(serde_json::json!({ "success": true }))
 }
 
 async fn handle_list_downloads(State(state): State<AppState>) -> impl IntoResponse {

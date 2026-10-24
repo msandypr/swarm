@@ -250,18 +250,8 @@ pub fn open_ui(url: &str) {
 }
 
 pub fn open_folder_in_explorer(path: &str) {
-    unsafe {
-        let path_wide = to_wide(path);
-        let open_str = to_wide("open");
-        ShellExecuteW(
-            null_mut(),
-            open_str.as_ptr(),
-            path_wide.as_ptr(),
-            null(),
-            null(),
-            SW_SHOWNORMAL,
-        );
-    }
+    let clean_path = path.strip_prefix(r"\\?\").unwrap_or(path);
+    let _ = std::process::Command::new("explorer.exe").arg(clean_path).spawn();
 }
 
 pub fn open_browser_extensions_page(browser: &str) -> bool {
