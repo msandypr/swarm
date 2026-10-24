@@ -33,8 +33,11 @@ pub struct DeleteQuery {
 }
 
 pub fn create_router(state: AppState) -> Router {
+    let cors = tower_http::cors::CorsLayer::permissive();
+
     let api_routes = Router::new()
         .route("/ping", get(handle_ping))
+        .route("/ext/handshake", get(handle_ext_handshake))
         .route("/downloads", get(handle_list_downloads).post(handle_add_download))
         .route("/ext/add", post(handle_ext_add))
         .route("/downloads/:id", patch(handle_action).delete(handle_delete))
@@ -49,6 +52,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/logo.png", get(handle_logo))
         .route("/favicon.png", get(handle_favicon))
         .nest("/api", api_routes)
+        .layer(cors)
         .layer(middleware::from_fn(validate_host))
         .with_state(state)
 }
@@ -58,18 +62,27 @@ async fn auth_token_middleware(
     req: Request,
     next: Next,
 ) -> Result<Response, StatusCode> {
-    // Exempt ping so extension / UI can check connectivity
+    // 1. Exempt ping and handshake so extension can auto-discover
     let path = req.uri().path();
-    if path == "/api/ping" || path == "/ping" || path.ends_with("/ping") {
+    if path == "/api/ping" || path == "/ping" || path.ends_with("/ping")
+        || path == "/api/ext/handshake" || path.ends_with("/ext/handshake")
+    {
         return Ok(next.run(req).await);
     }
 
+    // 2. Auto-authenticate extension requests via Origin header (unforgeable by web pages)
+    if let Some(origin) = req.headers().get(header::ORIGIN).and_then(|h| h.to_str().ok()) {
+        if origin.starts_with("chrome-extension://") || origin.starts_with("moz-extension://") {
+            return Ok(next.run(req).await);
+        }
+    }
+
+    // 3. Normal token check
     if let Some(token) = extract_token(&req) {
         if token == state.runtime.token {
             return Ok(next.run(req).await);
         }
     }
-
     Err(StatusCode::UNAUTHORIZED)
 }
 
@@ -105,6 +118,14 @@ async fn handle_ping(State(state): State<AppState>) -> impl IntoResponse {
         "version": "0.1.0",
         "port": state.runtime.port,
         "pid": state.runtime.pid,
+    }))
+}
+
+async fn handle_ext_handshake(State(state): State<AppState>) -> impl IntoResponse {
+    Json(serde_json::json!({
+        "status": "ok",
+        "token": state.runtime.token,
+        "port": state.runtime.port,
     }))
 }
 

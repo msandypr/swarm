@@ -1,13 +1,13 @@
 // Swarm Download Manager — Background Service Worker (Manifest V3)
+// Zero-Configuration Auto-Pairing Mode
 
 const DEFAULT_SETTINGS = {
   interceptEnabled: true,
   port: 52417,
   token: '',
-  minFileSizeKB: 0,
 };
 
-// Setup context menus on install
+// Setup context menus and perform initial handshake on install or browser startup
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.get(DEFAULT_SETTINGS, (settings) => {
     chrome.storage.local.set(settings);
@@ -24,7 +24,37 @@ chrome.runtime.onInstalled.addListener(() => {
     title: 'Download Media with Swarm',
     contexts: ['image', 'video', 'audio'],
   });
+
+  autoHandshake();
 });
+
+chrome.runtime.onStartup.addListener(() => {
+  autoHandshake();
+});
+
+// Auto-Handshake with daemon to synchronize token and port without user action
+async function autoHandshake() {
+  const settings = await getSettings();
+  const port = settings.port || 52417;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1000);
+    const res = await fetch(`http://127.0.0.1:${port}/api/ext/handshake`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.token) {
+        chrome.storage.local.set({ token: data.token, port: data.port });
+      }
+    }
+  } catch {
+    // Daemon offline, will retry on next intercept attempt
+  }
+}
 
 // Handle Context Menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -46,13 +76,8 @@ chrome.downloads.onCreated.addListener(async (downloadItem) => {
     const url = downloadItem.finalUrl || downloadItem.url;
     if (!url) return;
 
-    // Skip special and unsupported protocols
+    // Skip internal browser protocols
     if (url.startsWith('blob:') || url.startsWith('data:') || url.startsWith('chrome:') || url.startsWith('edge:') || url.startsWith('about:')) {
-      return;
-    }
-
-    // Skip small files if minimum threshold configured
-    if (settings.minFileSizeKB > 0 && downloadItem.fileSize > 0 && downloadItem.fileSize < settings.minFileSizeKB * 1024) {
       return;
     }
 
@@ -74,15 +99,32 @@ chrome.downloads.onCreated.addListener(async (downloadItem) => {
 });
 
 async function sendToDaemon(url, referrer, settings, cookieString, filename) {
-  const endpoint = `http://127.0.0.1:${settings.port}/api/ext/add`;
+  let port = settings.port || 52417;
+  let token = settings.token;
+
+  // If token is missing, attempt quick auto-handshake first
+  if (!token) {
+    try {
+      const hRes = await fetch(`http://127.0.0.1:${port}/api/ext/handshake`);
+      if (hRes.ok) {
+        const hData = await hRes.json();
+        token = hData.token;
+        chrome.storage.local.set({ token: hData.token, port: hData.port });
+      }
+    } catch {
+      // continue without token; Origin header will authenticate extension
+    }
+  }
+
+  const endpoint = `http://127.0.0.1:${port}/api/ext/add`;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 1200);
 
   const headers = {
     'Content-Type': 'application/json',
   };
-  if (settings.token) {
-    headers['Authorization'] = `Bearer ${settings.token}`;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   try {
@@ -101,7 +143,7 @@ async function sendToDaemon(url, referrer, settings, cookieString, filename) {
 
     clearTimeout(timeoutId);
     return res.ok;
-  } catch (err) {
+  } catch {
     clearTimeout(timeoutId);
     return false; // Daemon is offline or rejected
   }

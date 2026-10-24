@@ -1,55 +1,29 @@
-// Swarm Extension Popup Controller
+// Swarm Extension Popup Controller — Zero-Config Mode
 
 const elStatusPill = document.getElementById('status-pill');
 const elStatusText = document.getElementById('status-text');
 const elToggleIntercept = document.getElementById('toggle-intercept');
-const elInputPort = document.getElementById('input-port');
-const elInputToken = document.getElementById('input-token');
-const elBtnToggleToken = document.getElementById('btn-toggle-token');
-const elBtnSave = document.getElementById('btn-save');
+const elPortInfo = document.getElementById('port-info');
 const elBtnOpenApp = document.getElementById('btn-open-app');
 
 document.addEventListener('DOMContentLoaded', async () => {
   const settings = await getSettings();
 
   elToggleIntercept.checked = settings.interceptEnabled !== false;
-  elInputPort.value = settings.port || 52417;
-  elInputToken.value = settings.token || '';
+  elPortInfo.textContent = `127.0.0.1:${settings.port || 52417}`;
 
-  await checkDaemonStatus(settings.port);
+  await checkDaemonStatus(settings.port || 52417);
 
   // Toggle Intercept on-the-fly
   elToggleIntercept.addEventListener('change', () => {
     chrome.storage.local.set({ interceptEnabled: elToggleIntercept.checked });
   });
 
-  // Toggle Token Visibility
-  elBtnToggleToken.addEventListener('click', () => {
-    if (elInputToken.type === 'password') {
-      elInputToken.type = 'text';
-      elBtnToggleToken.textContent = '🔒';
-    } else {
-      elInputToken.type = 'password';
-      elBtnToggleToken.textContent = '👁';
-    }
-  });
-
-  // Save Settings
-  elBtnSave.addEventListener('click', async () => {
-    const port = parseInt(elInputPort.value) || 52417;
-    const token = elInputToken.value.trim();
-
-    await chrome.storage.local.set({ port, token });
-    elBtnSave.textContent = 'Saved!';
-    setTimeout(() => (elBtnSave.textContent = 'Save & Connect'), 1500);
-
-    await checkDaemonStatus(port);
-  });
-
   // Open App in Browser
-  elBtnOpenApp.addEventListener('click', () => {
-    const port = parseInt(elInputPort.value) || 52417;
-    const token = elInputToken.value.trim();
+  elBtnOpenApp.addEventListener('click', async () => {
+    const current = await getSettings();
+    const port = current.port || 52417;
+    const token = current.token || '';
     const url = token ? `http://127.0.0.1:${port}/?t=${encodeURIComponent(token)}` : `http://127.0.0.1:${port}/`;
     chrome.tabs.create({ url });
   });
@@ -62,12 +36,16 @@ async function checkDaemonStatus(port) {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 800);
-    const res = await fetch(`http://127.0.0.1:${port}/api/ping`, {
+    const res = await fetch(`http://127.0.0.1:${port}/api/ext/handshake`, {
       signal: controller.signal,
     });
     clearTimeout(timeout);
 
     if (res.ok) {
+      const data = await res.json();
+      if (data.token) {
+        chrome.storage.local.set({ token: data.token, port: data.port });
+      }
       elStatusPill.className = 'status-pill online';
       elStatusText.textContent = 'Online';
     } else {
