@@ -202,7 +202,10 @@ pub fn open_ui(url: &str) {
     for path in &edge_paths {
         if std::path::Path::new(path).exists() {
             let app_arg = format!("--app={}", url);
-            let _ = std::process::Command::new(path).arg(app_arg).spawn();
+            let _ = std::process::Command::new(path)
+                .arg(app_arg)
+                .arg("--window-size=920,530")
+                .spawn();
             launched = true;
             break;
         }

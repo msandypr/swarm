@@ -3,222 +3,369 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Swarm</title>
+  <title>Swarm Download Manager</title>
   <link rel="icon" type="image/png" href="./favicon.png" />
-  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const a of document.querySelectorAll('link[rel="modulepreload"]'))n(a);new MutationObserver(a=>{for(const o of a)if(o.type==="childList")for(const r of o.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&n(r)}).observe(document,{childList:!0,subtree:!0});function s(a){const o={};return a.integrity&&(o.integrity=a.integrity),a.referrerPolicy&&(o.referrerPolicy=a.referrerPolicy),a.crossOrigin==="use-credentials"?o.credentials="include":a.crossOrigin==="anonymous"?o.credentials="omit":o.credentials="same-origin",o}function n(a){if(a.ep)return;a.ep=!0;const o=s(a);fetch(a.href,o)}})();let i=new Map,y="all",l="",E=52417;const w=document.getElementById("download-list"),B=document.getElementById("empty-state"),H=document.getElementById("global-speed"),$=document.getElementById("connection-status"),O=document.getElementById("badge-all"),F=document.getElementById("badge-active"),N=document.getElementById("badge-completed"),q=document.getElementById("badge-paused"),L=document.getElementById("modal-add"),j=document.getElementById("form-add-download"),h=document.getElementById("input-url"),R=document.getElementById("select-connections"),C=document.getElementById("drawer-settings"),U=document.getElementById("token-input"),x=document.getElementById("btn-copy-token"),V=document.getElementById("active-port");function G(){J(),K(),k(),Q()}function J(){const t=new URLSearchParams(window.location.search).get("t");t?(l=t,localStorage.setItem("swarm_token",t),window.history.replaceState({},document.title,window.location.pathname)):l=localStorage.getItem("swarm_token")||"",U.value=l||"No token active"}function K(){document.getElementById("btn-add-modal")?.addEventListener("click",S),document.getElementById("btn-empty-add")?.addEventListener("click",S),document.getElementById("btn-close-modal")?.addEventListener("click",b),document.getElementById("btn-cancel-modal")?.addEventListener("click",b),j?.addEventListener("submit",async e=>{e.preventDefault();const t=h.value.trim(),s=parseInt(R.value)||8;t&&(await W(t,s),b(),h.value="")}),document.getElementById("btn-settings")?.addEventListener("click",()=>{C.classList.add("open")}),document.getElementById("btn-close-drawer")?.addEventListener("click",()=>{C.classList.remove("open")}),x?.addEventListener("click",()=>{l&&(navigator.clipboard.writeText(l),x.textContent="Copied",setTimeout(()=>x.textContent="Copy",2e3))}),document.querySelectorAll(".filter-tab").forEach(e=>{e.addEventListener("click",()=>{document.querySelectorAll(".filter-tab").forEach(s=>s.classList.remove("active")),e.classList.add("active");const t=e.getAttribute("data-filter");(t==="all"||t==="downloading"||t==="completed"||t==="paused")&&(y=t),m()})}),document.getElementById("btn-pause-all")?.addEventListener("click",async()=>{for(const[e,t]of i)t.status==="Downloading"&&await I(e,"pause")}),document.getElementById("btn-clear-completed")?.addEventListener("click",async()=>{for(const[e,t]of i)t.status==="Completed"&&await M(e,!1)})}function S(){L.classList.add("open"),h.focus(),navigator.clipboard&&navigator.clipboard.readText&&navigator.clipboard.readText().then(e=>{e&&(e.startsWith("http://")||e.startsWith("https://"))&&(h.value=e)}).catch(()=>{})}function b(){L.classList.remove("open")}async function k(){try{const e=await fetch("/api/ping");e.ok&&(E=(await e.json()).port,V.textContent=E.toString());const t={};l&&(t.Authorization=`Bearer ${l}`);const s=await fetch("/api/downloads",{credentials:"include",headers:t});if(s.ok){const n=await s.json();i.clear(),n.forEach(a=>i.set(a.id,a)),m()}}catch(e){console.error("Failed to fetch initial downloads:",e)}}async function W(e,t){try{const s={"Content-Type":"application/json"};l&&(s.Authorization=`Bearer ${l}`);const n=await fetch("/api/downloads",{method:"POST",headers:s,body:JSON.stringify({url:e,connections:t})});n.ok?await k():alert("Failed to start download: "+await n.text())}catch{alert("Network error when adding download")}}async function I(e,t){try{const s={"Content-Type":"application/json"};l&&(s.Authorization=`Bearer ${l}`),await fetch(`/api/downloads/${e}`,{method:"PATCH",headers:s,body:JSON.stringify({action:t})});const n=i.get(e);n&&t==="pause"&&(n.status="Paused",n.speed_bytes_per_sec=0,z(n))}catch(s){console.error("Failed to trigger action:",s)}}async function M(e,t=!1){try{const s={};l&&(s.Authorization=`Bearer ${l}`),await fetch(`/api/downloads/${e}?delete_file=${t}`,{method:"DELETE",headers:s}),i.delete(e),m()}catch(s){console.error("Failed to delete download:",s)}}function Q(){const e=l?`/api/events?t=${encodeURIComponent(l)}`:"/api/events",t=new EventSource(e);t.onopen=()=>{$.innerHTML='<span class="status-indicator"></span><span class="status-label">Online</span>'},t.addEventListener("progress",s=>{try{const n=JSON.parse(s.data),a=n.id;let o=i.get(a);o?(o.filename=n.filename||o.filename,o.total_size=n.total_size||o.total_size,o.downloaded_bytes=n.downloaded_bytes,o.status=n.status,o.speed_bytes_per_sec=n.speed_bytes_per_sec,o.eta_seconds=n.eta_seconds,o.segments=n.segments,z(o)):(o={id:n.id,url:"",filename:n.filename,output_path:"",total_size:n.total_size,downloaded_bytes:n.downloaded_bytes,status:n.status,speed_bytes_per_sec:n.speed_bytes_per_sec,eta_seconds:n.eta_seconds,segments:n.segments},i.set(a,o),m()),P()}catch(n){console.error("SSE parse error:",n)}}),t.onerror=()=>{$.innerHTML='<span class="status-indicator" style="background:#fbbf24"></span><span class="status-label" style="color:#fbbf24">Reconnecting</span>'}}function m(){const e=Array.from(i.values()),t=e.filter(o=>o.status==="Downloading").length,s=e.filter(o=>o.status==="Completed").length,n=e.filter(o=>o.status==="Paused").length;O.textContent=e.length.toString(),F.textContent=t.toString(),N.textContent=s.toString(),q.textContent=n.toString();const a=e.filter(o=>y==="downloading"?o.status==="Downloading":y==="completed"?o.status==="Completed":y==="paused"?o.status==="Paused":!0);if(a.length===0){w.innerHTML="",B.style.display="flex";return}B.style.display="none",w.innerHTML="",a.forEach(o=>{w.appendChild(X(o))}),P()}function X(e){const t=document.createElement("div");t.className="download-card",t.id=`card-${e.id}`;const s=Y(e.filename),n=e.total_size?d(e.total_size):"Unknown",a=d(e.downloaded_bytes),o=e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0,r=e.status==="Downloading"&&e.speed_bytes_per_sec?d(e.speed_bytes_per_sec)+"/s":"--",u=e.status==="Downloading"&&e.eta_seconds!==void 0?T(e.eta_seconds):"--";return t.innerHTML=`
-    <div class="card-top">
-      <div class="file-meta-col">
-        <div class="file-type-icon">${s}</div>
-        <div class="file-title-wrap">
-          <span class="file-title" title="${g(e.filename)}">${g(e.filename||"Starting download...")}</span>
-          <span class="file-source" title="${g(e.url)}">${g(e.url)}</span>
-        </div>
+  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))n(s);new MutationObserver(s=>{for(const a of s)if(a.type==="childList")for(const r of a.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&n(r)}).observe(document,{childList:!0,subtree:!0});function o(s){const a={};return s.integrity&&(a.integrity=s.integrity),s.referrerPolicy&&(a.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?a.credentials="include":s.crossOrigin==="anonymous"?a.credentials="omit":a.credentials="same-origin",a}function n(s){if(s.ep)return;s.ep=!0;const a=o(s);fetch(s.href,a)}})();/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const z={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round"};/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const P=([e,t,o])=>{const n=document.createElementNS("http://www.w3.org/2000/svg",e);return Object.keys(t).forEach(s=>{n.setAttribute(s,String(t[s]))}),o?.length&&o.forEach(s=>{const a=P(s);n.appendChild(a)}),n},V=(e,t={})=>{const n={...z,...t};return P(["svg",n,e])};/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const R=(...e)=>e.filter((t,o,n)=>!!t&&t.trim()!==""&&n.indexOf(t)===o).join(" ").trim();/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const U=e=>{for(const t in e)if(t.startsWith("aria-")||t==="role"||t==="title")return!0;return!1};/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const J=e=>{let t="",o=!1;for(const n of e){if(n==="-"||n==="_"||n<=" "){o=t.length>0;continue}t.length===0?t+=n.toLowerCase():t+=o?n.toUpperCase():n,o=!1}return t};/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const G=e=>{const t=J(e);return t.charAt(0).toUpperCase()+t.slice(1)};/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const K=e=>Array.from(e.attributes).reduce((t,o)=>(t[o.name]=o.value,t),{}),x=e=>typeof e=="string"?e:!e||!e.class?"":e.class&&typeof e.class=="string"?e.class.split(" "):e.class&&Array.isArray(e.class)?e.class:"",I=(e,{nameAttr:t,icons:o,attrs:n})=>{const s=e.getAttribute(t);if(s==null)return;const a=G(s),r=o[a];if(!r)return console.warn(`${e.outerHTML} icon name was not found in the provided icons object.`);const d=K(e),v=U(d)?{}:{"aria-hidden":"true"},S={...z,"data-lucide":s,...v,...n,...d},H=x(d),j=x(n),B=R("lucide",`lucide-${s}`,...H,...j);B&&Object.assign(S,{class:B});const q=V(r,S);return e.parentNode?.replaceChild(q,e)};/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const W=[["rect",{width:"20",height:"5",x:"2",y:"3",rx:"1"}],["path",{d:"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"}],["path",{d:"M10 12h4"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const Z=[["rect",{x:"14",y:"14",width:"4",height:"6",rx:"2"}],["rect",{x:"6",y:"4",width:"4",height:"6",rx:"2"}],["path",{d:"M6 20h4"}],["path",{d:"M14 10h4"}],["path",{d:"M6 14h2v6"}],["path",{d:"M14 4h2v6"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const X=[["path",{d:"M21 16V3a1 1 0 0 0-1.28-.96l-10 2.917a1 1 0 0 0-.72.96V19"}],["circle",{cx:"18",cy:"16",r:"3"}],["circle",{cx:"6",cy:"19",r:"3"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const Q=[["path",{d:"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"}],["path",{d:"M14 2v5a1 1 0 0 0 1 1h5"}],["path",{d:"M10 9H8"}],["path",{d:"M16 13H8"}],["path",{d:"M16 17H8"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const Y=[["path",{d:"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"}],["path",{d:"M14 2v5a1 1 0 0 0 1 1h5"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ee=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2"}],["path",{d:"M7 3v18"}],["path",{d:"M3 7.5h4"}],["path",{d:"M3 12h18"}],["path",{d:"M3 16.5h4"}],["path",{d:"M17 3v18"}],["path",{d:"M17 7.5h4"}],["path",{d:"M17 16.5h4"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const te=[["path",{d:"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"}],["path",{d:"m9 13 2 2 4-4"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ne=[["path",{d:"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"}],["path",{d:"M12 10v6"}],["path",{d:"m15 13-3 3-3-3"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const oe=[["path",{d:"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const se=[["circle",{cx:"12",cy:"12",r:"10"}],["path",{d:"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"}],["path",{d:"M2 12h20"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ae=[["circle",{cx:"12",cy:"12",r:"10"}],["path",{d:"M12 16v-4"}],["path",{d:"M12 8h.01"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const re=[["path",{d:"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ce=[["path",{d:"M5 12h14"}],["path",{d:"M12 5v14"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ie=[["path",{d:"M12 2v10"}],["path",{d:"M18.4 6.6a9 9 0 1 1-12.77.04"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const de=[["path",{d:"M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"}],["circle",{cx:"12",cy:"12",r:"3"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const le=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const ue=[["path",{d:"M18 6 6 18"}],["path",{d:"m6 6 12 12"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const D=({icons:e={},nameAttr:t="data-lucide",attrs:o={},root:n=document,inTemplates:s}={})=>{if(!Object.values(e).length)throw new Error(`Please provide an icons object.
+If you want to use all the icons you can import it like:
+ \`import { createIcons, icons } from 'lucide';
+lucide.createIcons({icons});\``);if(typeof n>"u")throw new Error("`createIcons()` only works in a browser environment.");if(Array.from(n.querySelectorAll(`[${t}]`)).forEach(r=>I(r,{nameAttr:t,icons:e,attrs:o})),s&&Array.from(n.querySelectorAll("template")).forEach(d=>D({icons:e,nameAttr:t,attrs:o,root:d.content,inTemplates:s})),t==="data-lucide"){const r=n.querySelectorAll("[icon-name]");r.length>0&&(console.warn("[Lucide] Some icons were found with the now deprecated icon-name attribute. These will still be replaced for backwards compatibility, but will no longer be supported in v1.0 and you should switch to data-lucide"),Array.from(r).forEach(d=>I(d,{nameAttr:"icon-name",icons:e,attrs:o})))}};let u=new Map,i=null,l="all",c="",k=52417;const A=document.getElementById("table-body"),pe=document.getElementById("status-summary"),me=document.getElementById("status-speed"),p=document.getElementById("btn-resume"),m=document.getElementById("btn-stop"),g=document.getElementById("btn-delete"),f=document.getElementById("modal-url"),fe=document.getElementById("form-new-url"),h=document.getElementById("input-url"),he=document.getElementById("select-sockets"),b=document.getElementById("modal-browsers"),ge=document.getElementById("token-input"),E=document.getElementById("btn-copy-token"),ye=document.getElementById("active-port"),L=document.getElementById("modal-about");function we(){ve(),_(),be(),T(),Me()}function _(){D({icons:{Plus:ce,Play:re,Square:le,X:ue,Settings:de,Globe:se,Info:ae,Power:ie,Folder:oe,FolderCheck:te,FolderDown:ne,Film:ee,Music:X,Archive:W,FileText:Q,Binary:Z,File:Y}})}function ve(){const t=new URLSearchParams(window.location.search).get("t");t?(c=t,localStorage.setItem("swarm_token",t),window.history.replaceState({},document.title,window.location.pathname)):c=localStorage.getItem("swarm_token")||"",ge.value=c}function be(){document.getElementById("btn-new-url")?.addEventListener("click",()=>{f.classList.add("open"),h.focus(),navigator.clipboard&&navigator.clipboard.readText&&navigator.clipboard.readText().then(e=>{e&&(e.startsWith("http://")||e.startsWith("https://"))&&(h.value=e)}).catch(()=>{})}),document.getElementById("btn-close-url-dialog")?.addEventListener("click",()=>{f.classList.remove("open")}),document.getElementById("btn-cancel-url")?.addEventListener("click",()=>{f.classList.remove("open")}),fe.addEventListener("submit",async e=>{e.preventDefault();const t=h.value.trim(),o=parseInt(he.value)||8;t&&(await Ee(t,o),f.classList.remove("open"),h.value="")}),p.addEventListener("click",()=>{i&&$(i,"resume")}),m.addEventListener("click",()=>{i&&$(i,"pause")}),g.addEventListener("click",()=>{i&&confirm("Delete this download?")&&Le(i,!0)}),document.getElementById("btn-browsers")?.addEventListener("click",()=>{b.classList.add("open")}),document.getElementById("btn-close-browsers-dialog")?.addEventListener("click",()=>{b.classList.remove("open")}),document.getElementById("btn-close-browsers")?.addEventListener("click",()=>{b.classList.remove("open")}),E.addEventListener("click",()=>{c&&(navigator.clipboard.writeText(c),E.textContent="Copied",setTimeout(()=>E.textContent="Copy",1500))}),document.getElementById("btn-about")?.addEventListener("click",()=>{L.classList.add("open")}),document.getElementById("btn-close-about-dialog")?.addEventListener("click",()=>{L.classList.remove("open")}),document.getElementById("btn-close-about")?.addEventListener("click",()=>{L.classList.remove("open")}),document.getElementById("btn-quit")?.addEventListener("click",()=>{window.close()}),document.querySelectorAll("[data-category]").forEach(e=>{e.addEventListener("click",t=>{t.stopPropagation(),document.querySelectorAll("[data-category]").forEach(n=>n.classList.remove("active")),e.classList.add("active");const o=e.getAttribute("data-category");(o==="all"||o==="video"||o==="audio"||o==="compressed"||o==="document"||o==="application"||o==="misc"||o==="complete"||o==="incomplete")&&(l=o),w()})})}async function T(){try{const e=await fetch("/api/ping");e.ok&&(k=(await e.json()).port,ye.textContent=k.toString());const t={};c&&(t.Authorization=`Bearer ${c}`);const o=await fetch("/api/downloads",{credentials:"include",headers:t});if(o.ok){const n=await o.json();u.clear(),n.forEach(s=>u.set(s.id,s)),w()}}catch(e){console.error("Fetch error:",e)}}async function Ee(e,t){try{const o={"Content-Type":"application/json"};c&&(o.Authorization=`Bearer ${c}`);const n=await fetch("/api/downloads",{method:"POST",headers:o,body:JSON.stringify({url:e,connections:t})});n.ok?await T():alert("Failed: "+await n.text())}catch{alert("Network error adding download")}}async function $(e,t){try{const o={"Content-Type":"application/json"};c&&(o.Authorization=`Bearer ${c}`),await fetch(`/api/downloads/${e}`,{method:"PATCH",headers:o,body:JSON.stringify({action:t})});const n=u.get(e);n&&t==="pause"&&(n.status="Paused",n.speed_bytes_per_sec=0,N(n),M())}catch(o){console.error("Action error:",o)}}async function Le(e,t=!1){try{const o={};c&&(o.Authorization=`Bearer ${c}`),await fetch(`/api/downloads/${e}?delete_file=${t}`,{method:"DELETE",headers:o}),u.delete(e),i===e&&(i=null),w()}catch(o){console.error("Delete error:",o)}}function Me(){const e=c?`/api/events?t=${encodeURIComponent(c)}`:"/api/events";new EventSource(e).addEventListener("progress",o=>{try{const n=JSON.parse(o.data),s=n.id;let a=u.get(s);a?(a.filename=n.filename||a.filename,a.total_size=n.total_size||a.total_size,a.downloaded_bytes=n.downloaded_bytes,a.status=n.status,a.speed_bytes_per_sec=n.speed_bytes_per_sec,a.eta_seconds=n.eta_seconds,a.segments=n.segments,N(a)):(a={id:n.id,url:"",filename:n.filename,output_path:"",total_size:n.total_size,downloaded_bytes:n.downloaded_bytes,status:n.status,speed_bytes_per_sec:n.speed_bytes_per_sec,eta_seconds:n.eta_seconds,segments:n.segments},u.set(s,a),w()),F()}catch(n){console.error("SSE error:",n)}})}function w(){const t=Array.from(u.values()).filter(o=>{if(l==="complete")return o.status==="Completed";if(l==="incomplete")return o.status!=="Completed";if(l==="all")return!0;const n=(o.filename.split(".").pop()||"").toLowerCase();return l==="video"?["mp4","mkv","avi","mov","webm"].includes(n):l==="audio"?["mp3","wav","flac","aac"].includes(n):l==="compressed"?["zip","rar","7z","tar","gz","iso"].includes(n):l==="document"?["pdf","doc","docx","txt","epub"].includes(n):l==="application"?["exe","msi","bin"].includes(n):l==="misc"?!["mp4","mkv","avi","mov","webm","mp3","wav","flac","aac","zip","rar","7z","tar","gz","iso","pdf","doc","docx","txt","epub","exe","msi","bin"].includes(n):!0});A.innerHTML="",t.forEach(o=>{const n=document.createElement("tr");n.className=`download-row ${i===o.id?"selected":""}`,n.id=`row-${o.id}`,n.addEventListener("click",()=>{document.querySelectorAll(".download-row").forEach(s=>s.classList.remove("selected")),n.classList.add("selected"),i=o.id,M()}),n.innerHTML=O(o),A.appendChild(n)}),_(),M(),F()}function N(e){const t=document.getElementById(`row-${e.id}`);t&&(t.innerHTML=O(e),_())}function O(e){const t=_e(e.filename),o=e.total_size?y(e.total_size):y(e.downloaded_bytes);let n="Complete",s="status-done";e.status==="Downloading"?(n=`Downloading ( ${e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0}% )`,s="status-active"):e.status==="Paused"?(n=`Paused ( ${e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0}% )`,s="status-paused"):e.status==="Failed"&&(n="Error ( 0% )",s="status-error");const a=e.status==="Downloading"&&e.speed_bytes_per_sec?y(e.speed_bytes_per_sec)+"/s":"",r=e.status==="Downloading"&&e.eta_seconds!==void 0?Se(e.eta_seconds):"",d=Be(e.created_at);return`
+    <td class="col-filename">
+      <div class="file-cell">
+        <i data-lucide="${t}"></i>
+        <span class="file-text" title="${C(e.filename)}">${C(e.filename||"Starting download...")}</span>
       </div>
-      <div class="card-action-bar">
-        ${e.status==="Downloading"?`<button class="btn-tool" data-action="pause" data-id="${e.id}" title="Pause">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-               </button>`:e.status==="Paused"?`<button class="btn-tool" data-action="resume" data-id="${e.id}" title="Resume">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-               </button>`:""}
-        <button class="btn-tool remove" data-action="delete" data-id="${e.id}" title="Delete">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="metrics-row">
-      <div class="metrics-left">
-        <span>${a} of ${n} (${o}%)</span>
-        <span style="color:${D(e.status)}">${e.status}</span>
-      </div>
-      <div class="metrics-right">
-        <span class="metric-rate">${r}</span>
-        <span>ETA: ${u}</span>
-      </div>
-    </div>
-
-    <div class="segment-bar" id="bar-${e.id}">
-      ${A(e)}
-    </div>
-  `,t.querySelectorAll("[data-action]").forEach(p=>{p.addEventListener("click",f=>{const _=f.currentTarget,c=_.getAttribute("data-action"),v=_.getAttribute("data-id");v&&(c==="delete"?confirm("Delete this download record?")&&M(v,!0):(c==="pause"||c==="resume"||c==="cancel")&&I(v,c))})}),t}function z(e){const t=document.getElementById(`card-${e.id}`);if(!t)return;const s=e.total_size?d(e.total_size):"Unknown",n=d(e.downloaded_bytes),a=e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0,o=e.status==="Downloading"&&e.speed_bytes_per_sec?d(e.speed_bytes_per_sec)+"/s":"--";e.status==="Downloading"&&e.eta_seconds!==void 0&&T(e.eta_seconds);const r=t.querySelector(".file-title");r&&e.filename&&(r.textContent=e.filename);const u=t.querySelector(".metrics-left");u&&(u.innerHTML=`
-      <span>${n} of ${s} (${a}%)</span>
-      <span style="color:${D(e.status)}">${e.status}</span>
-    `);const p=t.querySelector(".metric-rate");p&&(p.textContent=o);const f=document.getElementById(`bar-${e.id}`);f&&(f.innerHTML=A(e))}function A(e){if(e.status==="Completed")return'<div class="segment-track" style="flex:1"><div class="segment-solid-fill done" style="width:100%"></div></div>';if(!e.segments||e.segments.length===0){const s=e.total_size?Math.min(100,e.downloaded_bytes/e.total_size*100):0;return`<div class="segment-track" style="flex:1"><div class="segment-solid-fill ${e.status==="Paused"?"paused":""}" style="width:${s}%"></div></div>`}const t=e.status==="Paused"?"paused":"";return e.segments.map(s=>{const n=s.end-s.start+1,a=n>0?Math.min(100,s.downloaded/n*100):0;return`
-        <div class="segment-track" style="flex:${n}">
-          <div class="segment-solid-fill ${t}" style="width:${a}%"></div>
-        </div>
-      `}).join("")}function P(){let e=0;for(const t of i.values())t.status==="Downloading"&&t.speed_bytes_per_sec&&(e+=t.speed_bytes_per_sec);H.textContent=e>0?`${d(e)}/s`:"0.0 KB/s"}function d(e){if(e<=0)return"0 B";const t=1024,s=["B","KB","MB","GB","TB"],n=Math.floor(Math.log(e)/Math.log(t));return parseFloat((e/Math.pow(t,n)).toFixed(1))+" "+s[n]}function T(e){if(e<=0)return"0s";if(e<60)return`${e}s`;const t=Math.floor(e/60),s=e%60;return t<60?`${t}m ${s}s`:`${Math.floor(t/60)}h ${t%60}m`}function D(e){switch(e){case"Downloading":return"var(--fill-active)";case"Completed":return"var(--fill-completed)";case"Paused":return"var(--fill-paused)";case"Failed":return"var(--fill-failed)";default:return"var(--text-muted)"}}function Y(e){const t=e?.split(".").pop()?.toLowerCase()||"";return["zip","rar","7z","tar","gz","iso"].includes(t)?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>':["mp4","mkv","avi","mov","webm","mp3","wav","flac"].includes(t)?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>':["exe","msi","bin"].includes(t)?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>'}function g(e){return e?e.replace(/[&<>"']/g,t=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[t]||t):""}window.addEventListener("DOMContentLoaded",G);</script>
-  <style rel="stylesheet" crossorigin>:root{--bg-root: #0f1012;--bg-surface: #16171b;--bg-card: #1c1d22;--bg-card-hover: #212329;--bg-element: #262830;--bg-element-active: #2f323c;--border-subtle: #272931;--border-medium: #343742;--border-focus: #5a5f70;--text-main: #f0f1f4;--text-secondary: #9da1ad;--text-muted: #626673;--fill-active: #38bdf8;--fill-completed: #34d399;--fill-paused: #fbbf24;--fill-failed: #f87171;--font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;--font-mono: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;--radius-xs: 4px;--radius-sm: 6px;--radius-md: 8px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font-sans);background-color:var(--bg-root);color:var(--text-main);height:100vh;overflow:hidden;display:flex;flex-direction:column;user-select:none;font-size:13px;line-height:1.4}#app{display:flex;flex-direction:column;height:100%}.header{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background-color:var(--bg-surface);border-bottom:1px solid var(--border-subtle);z-index:10}.header-left{display:flex;align-items:center;gap:10px}.brand-logo{width:26px;height:26px;object-fit:contain}.brand-text{display:flex;align-items:baseline;gap:6px}.brand-title{font-size:.95rem;font-weight:700;letter-spacing:.8px;color:var(--text-main)}.brand-version{font-size:.7rem;color:var(--text-muted);font-family:var(--font-mono)}.header-center{display:flex;align-items:center}.stat-pill{display:flex;align-items:center;gap:8px;background-color:var(--bg-root);padding:4px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-subtle)}.icon-stat{width:14px;height:14px;color:var(--text-secondary)}.stat-meta{display:flex;align-items:baseline;gap:6px}.stat-value{font-size:.85rem;font-weight:600;font-family:var(--font-mono);color:var(--text-main);font-variant-numeric:tabular-nums}.stat-label{font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}.header-right{display:flex;align-items:center;gap:8px}.status-chip{display:flex;align-items:center;gap:6px;padding:4px 9px;background-color:var(--bg-root);border:1px solid var(--border-subtle);border-radius:var(--radius-xs);font-size:.72rem;color:var(--text-secondary)}.status-indicator{width:6px;height:6px;border-radius:50%;background-color:var(--fill-completed)}.toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;background-color:var(--bg-root);border-bottom:1px solid var(--border-subtle)}.filter-group{display:flex;gap:4px}.filter-tab{background:transparent;border:1px solid transparent;color:var(--text-secondary);font-size:.78rem;font-weight:500;padding:5px 10px;border-radius:var(--radius-xs);cursor:pointer;display:flex;align-items:center;gap:6px}.filter-tab:hover{background-color:var(--bg-surface);color:var(--text-main)}.filter-tab.active{background-color:var(--bg-surface);border-color:var(--border-medium);color:var(--text-main)}.filter-tab .count{font-size:.68rem;font-family:var(--font-mono);color:var(--text-muted)}.toolbar-controls{display:flex;gap:8px}.control-btn{background:transparent;border:none;color:var(--text-muted);font-size:.76rem;cursor:pointer;padding:4px 6px;border-radius:var(--radius-xs)}.control-btn:hover{color:var(--text-main);background-color:var(--bg-surface)}.content-view{flex:1;overflow-y:auto;padding:14px 18px}.item-list{display:flex;flex-direction:column;gap:8px}.download-card{background-color:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:12px 14px;display:flex;flex-direction:column;gap:10px}.download-card:hover{background-color:var(--bg-card-hover);border-color:var(--border-medium)}.card-top{display:flex;align-items:center;justify-content:space-between}.file-meta-col{display:flex;align-items:center;gap:10px;overflow:hidden}.file-type-icon{width:28px;height:28px;background-color:var(--bg-element);border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}.file-title-wrap{display:flex;flex-direction:column;overflow:hidden}.file-title{font-size:.88rem;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:480px}.file-source{font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:480px}.card-action-bar{display:flex;align-items:center;gap:4px}.metrics-row{display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--text-secondary);font-family:var(--font-mono);font-variant-numeric:tabular-nums}.metrics-left,.metrics-right{display:flex;gap:12px}.metric-rate{color:var(--fill-active);font-weight:600}.segment-bar{display:flex;height:6px;background-color:var(--bg-root);border-radius:3px;overflow:hidden;gap:1px;border:1px solid var(--border-subtle)}.segment-track{height:100%;background-color:#202228;position:relative;overflow:hidden}.segment-solid-fill{height:100%;background-color:var(--fill-active)}.segment-solid-fill.done{background-color:var(--fill-completed)}.segment-solid-fill.paused{background-color:var(--fill-paused)}.btn{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--radius-xs);font-size:.78rem;font-weight:500;cursor:pointer;border:1px solid transparent}.btn-icon{width:14px;height:14px}.btn-default{background-color:var(--bg-element);color:var(--text-main);border-color:var(--border-subtle)}.btn-default:hover{background-color:var(--bg-element-active);border-color:var(--border-medium)}.btn-action{background-color:#f0f1f4;color:#0f1012;font-weight:600}.btn-action:hover{background-color:#fff}.btn-compact{padding:4px 8px;font-size:.72rem}.btn-tool{background:transparent;border:1px solid transparent;color:var(--text-muted);width:26px;height:26px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;cursor:pointer}.btn-tool:hover{background-color:var(--bg-element);color:var(--text-main);border-color:var(--border-subtle)}.btn-tool.remove:hover{background-color:#f8717126;color:var(--fill-failed);border-color:#f871714d}.empty-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}.empty-icon-box{width:52px;height:52px;border-radius:var(--radius-sm);background-color:var(--bg-surface);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);margin-bottom:14px}.empty-headline{font-size:.95rem;font-weight:600;margin-bottom:4px}.empty-caption{font-size:.78rem;color:var(--text-muted);max-width:320px;margin-bottom:18px;line-height:1.4}.overlay{position:fixed;inset:0;background-color:#000000a6;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:100}.overlay.open{opacity:1;pointer-events:auto}.dialog{background-color:var(--bg-surface);border:1px solid var(--border-medium);border-radius:var(--radius-md);width:440px;max-width:90%;padding:18px}.dialog-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.dialog-title{font-size:.95rem;font-weight:600}.icon-close{background:transparent;border:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center}.icon-close:hover{color:var(--text-main)}.input-block{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}.input-grid{display:flex;gap:10px}.input-grid .input-block{flex:1}label{font-size:.75rem;font-weight:500;color:var(--text-secondary)}input,select,textarea{background-color:var(--bg-root);border:1px solid var(--border-subtle);border-radius:var(--radius-xs);padding:7px 10px;color:var(--text-main);font-size:.8rem;font-family:inherit;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--border-focus)}.dialog-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.overlay:has(.drawer){justify-content:flex-end}.drawer{width:360px;height:100%;background-color:var(--bg-surface);border-left:1px solid var(--border-subtle);padding:18px;display:flex;flex-direction:column}.drawer-content{display:flex;flex-direction:column;gap:14px;overflow-y:auto}.config-panel{background-color:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:12px}.panel-heading{font-size:.82rem;font-weight:600;margin-bottom:4px}.panel-desc{font-size:.75rem;color:var(--text-muted);line-height:1.4;margin-bottom:8px}.copy-field{display:flex;gap:6px;margin-bottom:6px}.copy-field input{flex:1;font-family:var(--font-mono);font-size:.72rem}.panel-footnote{font-size:.7rem;color:var(--text-muted)}.panel-footnote code{font-family:var(--font-mono);color:var(--text-secondary)}</style>
+    </td>
+    <td class="col-size mono-num">${o}</td>
+    <td class="col-status ${s}">${n}</td>
+    <td class="col-speed mono-num">${a}</td>
+    <td class="col-eta mono-num">${r}</td>
+    <td class="col-date mono-num">${d}</td>
+  `}function M(){if(!i){p.classList.add("disabled"),m.classList.add("disabled"),g.classList.add("disabled");return}const e=u.get(i);if(!e){p.classList.add("disabled"),m.classList.add("disabled"),g.classList.add("disabled");return}g.classList.remove("disabled"),e.status==="Downloading"?(p.classList.add("disabled"),m.classList.remove("disabled")):e.status==="Paused"?(p.classList.remove("disabled"),m.classList.add("disabled")):(p.classList.add("disabled"),m.classList.add("disabled"))}function F(){let e=0;for(const t of u.values())t.status==="Downloading"&&t.speed_bytes_per_sec&&(e+=t.speed_bytes_per_sec);me.textContent=e>0?`${y(e)}/s`:"0.0 KB/s",pe.textContent=`${u.size} downloads`}function _e(e){const t=(e?.split(".").pop()||"").toLowerCase();return["mp4","mkv","avi","mov","webm"].includes(t)?"film":["mp3","wav","flac","aac"].includes(t)?"music":["zip","rar","7z","tar","gz","iso"].includes(t)?"archive":["pdf","doc","docx","txt","epub"].includes(t)?"file-text":["exe","msi","bin"].includes(t)?"binary":"file"}function y(e){if(e<=0)return"0 B";const t=1024,o=["B","KB","MB","GB","TB"],n=Math.floor(Math.log(e)/Math.log(t));return parseFloat((e/Math.pow(t,n)).toFixed(1))+" "+o[n]}function Se(e){if(e<=0)return"0s";if(e<60)return`${e}s`;const t=Math.floor(e/60),o=e%60;return t<60?`${t}m ${o}s`:`${Math.floor(t/60)}h ${t%60}m`}function Be(e){const t=e?new Date(e*1e3):new Date,n=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()],s=t.getDate(),a=String(t.getHours()).padStart(2,"0"),r=String(t.getMinutes()).padStart(2,"0"),d=String(t.getSeconds()).padStart(2,"0");return`${n} ${s} ${a}:${r}:${d}`}function C(e){return e?e.replace(/[&<>"']/g,t=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[t]||t):""}window.addEventListener("DOMContentLoaded",we);</script>
+  <style rel="stylesheet" crossorigin>:root{--bg-main: #1f1f1f;--bg-header: #282828;--bg-sidebar: #222222;--bg-table: #1c1c1c;--bg-table-alt: #1e1e1e;--bg-table-hover: #2e2e2e;--bg-table-selected: #004b87;--bg-dialog: #2b2b2b;--bg-input: #181818;--border-dark: #333333;--border-light: #3f3f3f;--border-grid: #2e2e2e;--text-main: #ececec;--text-dim: #999999;--text-muted: #666666;--text-selected: #ffffff;--color-blue: #3b82f6;--color-red: #ef4444;--color-green: #10b981;--color-orange: #f59e0b;--font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;--font-data: "Segoe UI", Arial, sans-serif;--font-mono: Consolas, "Lucida Console", monospace}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font-system);background-color:var(--bg-main);color:var(--text-main);height:100vh;overflow:hidden;user-select:none;font-size:12px;line-height:1.3}#app{display:flex;flex-direction:column;height:100%}.toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px 6px;background-color:var(--bg-header);border-bottom:1px solid var(--border-dark);flex-shrink:0}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:16px}.tool-btn{background:transparent;border:none;color:var(--text-main);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:2px 6px;border-radius:4px}.tool-btn:hover{background-color:#ffffff0d}.tool-btn.disabled{opacity:.35;cursor:default;pointer-events:none}.tool-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff}.tool-icon svg{width:18px;height:18px}.btn-blue{background-color:#2563eb}.btn-red{background-color:#dc2626}.btn-icon-only{background-color:#3b82f6}.tool-label{font-size:11px;font-weight:500;color:var(--text-main)}.workspace{display:flex;flex:1;overflow:hidden}.sidebar{width:175px;background-color:var(--bg-sidebar);border-right:1px solid var(--border-dark);overflow-y:auto;padding:8px 6px;flex-shrink:0}.tree-menu{list-style:none}.tree-item{margin-bottom:2px}.tree-row{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:3px;cursor:pointer;color:var(--text-main);font-weight:500}.tree-row:hover{background-color:#ffffff0d}.tree-item.active>.tree-row{background-color:var(--bg-table-selected);color:var(--text-selected)}.tree-icon{width:14px;height:14px;color:#3b82f6;flex-shrink:0}.tree-sub{list-style:none;padding-left:20px;margin-top:2px}.tree-sub-item{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:3px;cursor:pointer;color:var(--text-dim);font-size:11.5px}.tree-sub-item:hover{background-color:#ffffff0d;color:var(--text-main)}.tree-sub-item.active{background-color:var(--bg-table-selected);color:var(--text-selected)}.tree-sub-item .tree-icon{width:13px;height:13px;color:var(--text-dim)}.main-table-pane{flex:1;background-color:var(--bg-table);overflow:auto;display:flex;flex-direction:column}.table-container{min-width:600px;height:100%}.download-table{width:100%;border-collapse:collapse;font-family:var(--font-data);font-size:12px;table-layout:fixed}.download-table thead{position:sticky;top:0;background-color:#292929;z-index:5}.download-table th{padding:5px 8px;text-align:left;font-weight:600;color:var(--text-dim);border-right:1px solid var(--border-dark);border-bottom:1px solid var(--border-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.download-table th:last-child{border-right:none}.download-table td{padding:4px 8px;border-bottom:1px solid var(--border-grid);border-right:1px solid var(--border-grid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}.download-table td:last-child{border-right:none}.col-filename{width:40%}.col-size{width:12%;text-align:right}.col-status{width:16%}.col-speed,.col-eta{width:14%;text-align:right}.col-date{width:120px;text-align:right}.download-row{cursor:pointer;height:25px}.download-row:hover{background-color:var(--bg-table-hover)}.download-row.selected{background-color:var(--bg-table-selected)!important;color:var(--text-selected)!important}.download-row.selected td{color:var(--text-selected)!important;border-bottom-color:#003e73}.file-cell{display:flex;align-items:center;gap:6px;overflow:hidden}.file-cell svg{width:14px;height:14px;color:var(--color-blue);flex-shrink:0}.file-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mono-num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.status-done{color:var(--color-green)}.status-active{color:var(--color-blue)}.status-paused{color:var(--color-orange)}.status-error{color:var(--color-red)}.download-row.selected .status-done,.download-row.selected .status-active,.download-row.selected .status-paused,.download-row.selected .status-error{color:#fff!important}.statusbar{display:flex;align-items:center;justify-content:space-between;padding:3px 12px;background-color:var(--bg-header);border-top:1px solid var(--border-dark);font-size:11px;color:var(--text-dim);height:22px;flex-shrink:0}.modal-layer{position:fixed;inset:0;background-color:#00000080;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:100}.modal-layer.open{opacity:1;pointer-events:auto}.compact-dialog{background-color:var(--bg-dialog);border:1px solid var(--border-light);width:420px;max-width:90%;box-shadow:0 8px 24px #0009;border-radius:4px;overflow:hidden}.dialog-titlebar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background-color:#242424;border-bottom:1px solid var(--border-dark);font-weight:600;font-size:11.5px}.dialog-x{background:transparent;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;line-height:1}.dialog-x:hover{color:var(--text-main)}.dialog-field{padding:10px;display:flex;flex-direction:column;gap:4px}.dialog-field label,.dialog-options label{font-size:11px;color:var(--text-dim)}.dialog-field textarea,.dialog-options select,.token-copy-box input{background-color:var(--bg-input);border:1px solid var(--border-dark);color:var(--text-main);padding:6px 8px;font-size:11.5px;font-family:inherit;outline:none;border-radius:3px}.dialog-field textarea:focus,.dialog-options select:focus{border-color:#3b82f6}.dialog-options{padding:0 10px 10px;display:flex;align-items:center;gap:8px}.dialog-buttons{padding:8px 10px;background-color:#242424;border-top:1px solid var(--border-dark);display:flex;justify-content:flex-end;gap:8px}.std-btn{background-color:#333;color:var(--text-main);border:1px solid #444444;padding:4px 12px;border-radius:3px;cursor:pointer;font-size:11.5px;font-weight:500}.std-btn:hover{background-color:#3d3d3d}.std-btn.primary{background-color:#2563eb;border-color:#1d4ed8;color:#fff}.std-btn.primary:hover{background-color:#1d4ed8}.dialog-body{padding:12px;display:flex;flex-direction:column;gap:8px}.dialog-desc{font-size:11.5px;color:var(--text-dim)}.token-copy-box{display:flex;gap:6px}.token-copy-box input{flex:1;font-family:var(--font-mono);font-size:11px}.dialog-note{font-size:11px;color:var(--text-muted)}.about-box{align-items:center;text-align:center;padding:18px 12px}.about-logo{width:44px;height:44px;margin-bottom:8px}.about-box h3{font-size:13px;margin-bottom:4px}</style>
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <img src="./logo.png" alt="Swarm Logo" class="brand-logo" />
-        <div class="brand-text">
-          <span class="brand-title">SWARM</span>
-          <span class="brand-version">v0.1.0</span>
-        </div>
-      </div>
-
-      <div class="header-center">
-        <div class="stat-pill">
-          <svg class="icon-stat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-          </svg>
-          <div class="stat-meta">
-            <span class="stat-value" id="global-speed">0.0 KB/s</span>
-            <span class="stat-label">Total Speed</span>
+    <!-- Top Action Toolbar -->
+    <header class="toolbar">
+      <div class="toolbar-left">
+        <button class="tool-btn" id="btn-new-url" title="Add New Download">
+          <div class="tool-icon btn-blue">
+            <i data-lucide="plus"></i>
           </div>
-        </div>
+          <span class="tool-label">New URL</span>
+        </button>
+
+        <button class="tool-btn disabled" id="btn-resume" title="Resume selected download">
+          <div class="tool-icon btn-blue">
+            <i data-lucide="play"></i>
+          </div>
+          <span class="tool-label">Resume</span>
+        </button>
+
+        <button class="tool-btn disabled" id="btn-stop" title="Stop selected download">
+          <div class="tool-icon btn-blue">
+            <i data-lucide="square"></i>
+          </div>
+          <span class="tool-label">Stop</span>
+        </button>
+
+        <button class="tool-btn disabled" id="btn-delete" title="Delete selected download">
+          <div class="tool-icon btn-red">
+            <i data-lucide="x"></i>
+          </div>
+          <span class="tool-label">Delete</span>
+        </button>
       </div>
 
-      <div class="header-right">
-        <div class="status-chip" id="connection-status" title="Connection state to local daemon">
-          <span class="status-indicator"></span>
-          <span class="status-label">Online</span>
-        </div>
-        <button class="btn btn-default" id="btn-settings" title="Settings & Pairing">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          <span>Settings</span>
+      <div class="toolbar-right">
+        <button class="tool-btn" id="btn-settings" title="Settings">
+          <div class="tool-icon btn-icon-only">
+            <i data-lucide="settings"></i>
+          </div>
+          <span class="tool-label">Settings</span>
         </button>
-        <button class="btn btn-action" id="btn-add-modal">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span>Add URL</span>
+
+        <button class="tool-btn" id="btn-browsers" title="Browser Integration & Extension">
+          <div class="tool-icon btn-icon-only">
+            <i data-lucide="globe"></i>
+          </div>
+          <span class="tool-label">Browsers</span>
+        </button>
+
+        <button class="tool-btn" id="btn-about" title="About Swarm">
+          <div class="tool-icon btn-icon-only">
+            <i data-lucide="info"></i>
+          </div>
+          <span class="tool-label">About</span>
+        </button>
+
+        <button class="tool-btn" id="btn-quit" title="Exit to Tray / Close App">
+          <div class="tool-icon btn-red">
+            <i data-lucide="power"></i>
+          </div>
+          <span class="tool-label">Quit</span>
         </button>
       </div>
     </header>
 
-    <!-- Subheader Toolbar -->
-    <nav class="toolbar">
-      <div class="filter-group" id="filter-tabs">
-        <button class="filter-tab active" data-filter="all">
-          <span>All</span>
-          <span class="count" id="badge-all">0</span>
-        </button>
-        <button class="filter-tab" data-filter="downloading">
-          <span>Active</span>
-          <span class="count" id="badge-active">0</span>
-        </button>
-        <button class="filter-tab" data-filter="completed">
-          <span>Completed</span>
-          <span class="count" id="badge-completed">0</span>
-        </button>
-        <button class="filter-tab" data-filter="paused">
-          <span>Paused</span>
-          <span class="count" id="badge-paused">0</span>
-        </button>
-      </div>
+    <!-- Workspace Split View -->
+    <div class="workspace">
+      <!-- Left Category Sidebar -->
+      <aside class="sidebar">
+        <ul class="tree-menu">
+          <li class="tree-item active" data-category="all">
+            <div class="tree-row">
+              <i data-lucide="folder" class="tree-icon"></i>
+              <span class="tree-label">All Downloads</span>
+            </div>
+            <ul class="tree-sub">
+              <li class="tree-sub-item" data-category="video">
+                <i data-lucide="film" class="tree-icon"></i>
+                <span>Video</span>
+              </li>
+              <li class="tree-sub-item" data-category="audio">
+                <i data-lucide="music" class="tree-icon"></i>
+                <span>Audio</span>
+              </li>
+              <li class="tree-sub-item" data-category="compressed">
+                <i data-lucide="archive" class="tree-icon"></i>
+                <span>Compressed</span>
+              </li>
+              <li class="tree-sub-item" data-category="document">
+                <i data-lucide="file-text" class="tree-icon"></i>
+                <span>Document</span>
+              </li>
+              <li class="tree-sub-item" data-category="application">
+                <i data-lucide="binary" class="tree-icon"></i>
+                <span>Application</span>
+              </li>
+              <li class="tree-sub-item" data-category="misc">
+                <i data-lucide="file" class="tree-icon"></i>
+                <span>Misc</span>
+              </li>
+            </ul>
+          </li>
+          <li class="tree-item" data-category="complete">
+            <div class="tree-row">
+              <i data-lucide="folder-check" class="tree-icon"></i>
+              <span class="tree-label">Complete</span>
+            </div>
+          </li>
+          <li class="tree-item" data-category="incomplete">
+            <div class="tree-row">
+              <i data-lucide="folder-down" class="tree-icon"></i>
+              <span class="tree-label">Incomplete</span>
+            </div>
+          </li>
+        </ul>
+      </aside>
 
-      <div class="toolbar-controls">
-        <button class="control-btn" id="btn-pause-all">Pause All</button>
-        <button class="control-btn" id="btn-clear-completed">Clear Finished</button>
-      </div>
-    </nav>
-
-    <!-- Main List Container -->
-    <main class="content-view">
-      <div class="item-list" id="download-list">
-        <!-- Rendered items -->
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-placeholder" id="empty-state">
-        <div class="empty-icon-box">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+      <!-- Right Main Table Area -->
+      <section class="main-table-pane">
+        <div class="table-container">
+          <table class="download-table" id="download-table">
+            <thead>
+              <tr>
+                <th class="col-filename">File Name</th>
+                <th class="col-size">Size</th>
+                <th class="col-status">Status</th>
+                <th class="col-speed">Bandwidth</th>
+                <th class="col-eta">Remaining Time</th>
+                <th class="col-date">Date Added</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <!-- Rows rendered by app.ts -->
+            </tbody>
+          </table>
         </div>
-        <p class="empty-headline">Queue is empty</p>
-        <p class="empty-caption">Paste a download URL or trigger downloads from your browser extension.</p>
-        <button class="btn btn-default" id="btn-empty-add">+ Add URL</button>
-      </div>
-    </main>
+      </section>
+    </div>
 
-    <!-- Add Download Modal -->
-    <div class="overlay" id="modal-add">
-      <div class="dialog">
-        <div class="dialog-header">
-          <h2 class="dialog-title">New Download</h2>
-          <button class="icon-close" id="btn-close-modal">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+    <!-- Status Bar -->
+    <footer class="statusbar">
+      <div class="status-left">
+        <span id="status-summary">0 downloads</span>
+      </div>
+      <div class="status-right">
+        <span id="status-speed">0.0 KB/s</span>
+      </div>
+    </footer>
+
+    <!-- Modal: New URL -->
+    <div class="modal-layer" id="modal-url">
+      <div class="compact-dialog">
+        <div class="dialog-titlebar">
+          <span>New Download URL</span>
+          <button class="dialog-x" id="btn-close-url-dialog">&times;</button>
         </div>
-        <form id="form-add-download">
-          <div class="input-block">
-            <label for="input-url">Target URL</label>
+        <form id="form-new-url">
+          <div class="dialog-field">
+            <label for="input-url">URL:</label>
             <textarea id="input-url" rows="3" placeholder="https://..." required></textarea>
           </div>
-          <div class="input-grid">
-            <div class="input-block">
-              <label for="select-connections">Parallel Sockets</label>
-              <select id="select-connections">
-                <option value="4">4 Connections</option>
-                <option value="8" selected>8 Connections (Standard)</option>
-                <option value="12">12 Connections</option>
-                <option value="16">16 Connections</option>
-              </select>
-            </div>
-            <div class="input-block">
-              <label for="input-limit">Rate Limit (KB/s)</label>
-              <input type="number" id="input-limit" placeholder="No limit" min="0" />
-            </div>
+          <div class="dialog-options">
+            <label for="select-sockets">Sockets:</label>
+            <select id="select-sockets">
+              <option value="4">4 connections</option>
+              <option value="8" selected>8 connections</option>
+              <option value="12">12 connections</option>
+              <option value="16">16 connections</option>
+            </select>
           </div>
-          <div class="dialog-footer">
-            <button type="button" class="btn btn-default" id="btn-cancel-modal">Cancel</button>
-            <button type="submit" class="btn btn-action">Start Download</button>
+          <div class="dialog-buttons">
+            <button type="submit" class="std-btn primary">Download Now</button>
+            <button type="button" class="std-btn" id="btn-cancel-url">Cancel</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Settings Drawer -->
-    <div class="overlay" id="drawer-settings">
-      <div class="drawer">
-        <div class="dialog-header">
-          <h2 class="dialog-title">Settings & Extension</h2>
-          <button class="icon-close" id="btn-close-drawer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+    <!-- Modal: Browsers / Extension Pairing -->
+    <div class="modal-layer" id="modal-browsers">
+      <div class="compact-dialog">
+        <div class="dialog-titlebar">
+          <span>Browser Integration</span>
+          <button class="dialog-x" id="btn-close-browsers-dialog">&times;</button>
         </div>
-        <div class="drawer-content">
-          <section class="config-panel">
-            <h3 class="panel-heading">Browser Extension Pairing</h3>
-            <p class="panel-desc">Paste this authentication token into the extension popup:</p>
-            <div class="copy-field">
-              <input type="text" id="token-input" readonly value="" />
-              <button class="btn btn-default btn-compact" id="btn-copy-token">Copy</button>
-            </div>
-            <p class="panel-footnote">Daemon active on <code>127.0.0.1:<span id="active-port">52417</span></code></p>
-          </section>
-
-          <section class="config-panel">
-            <h3 class="panel-heading">Windows Startup</h3>
-            <p class="panel-desc">Auto-start daemon in system tray. Managed via Windows Task Manager &rarr; Startup apps.</p>
-          </section>
-
-          <section class="config-panel">
-            <h3 class="panel-heading">Architecture</h3>
-            <p class="panel-desc">Rust core daemon &middot; Win32 tray &middot; NTFS Sparse file preallocation &middot; Memory budget &lt; 5MB.</p>
-          </section>
+        <div class="dialog-body">
+          <p class="dialog-desc">Install the Swarm extension in your browser, then pair it using this token:</p>
+          <div class="token-copy-box">
+            <input type="text" id="token-input" readonly value="" />
+            <button type="button" class="std-btn" id="btn-copy-token">Copy</button>
+          </div>
+          <p class="dialog-note">Daemon listening on port <strong id="active-port">52417</strong></p>
+          <div class="dialog-buttons">
+            <button type="button" class="std-btn primary" id="btn-close-browsers">Close</button>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Modal: About -->
+    <div class="modal-layer" id="modal-about">
+      <div class="compact-dialog">
+        <div class="dialog-titlebar">
+          <span>About Swarm</span>
+          <button class="dialog-x" id="btn-close-about-dialog">&times;</button>
+        </div>
+        <div class="dialog-body about-box">
+          <img src="./logo.png" alt="Swarm Logo" class="about-logo" />
+          <h3>Swarm Download Manager 0.1.0</h3>
+          <p>Ultra-low memory Rust download manager for Windows.</p>
+          <p class="dialog-note">Target memory: &lt; 5MB &middot; Multi-socket range downloads &middot; Windows Native Integration</p>
+          <div class="dialog-buttons">
+            <button type="button" class="std-btn primary" id="btn-close-about">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </body>

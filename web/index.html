@@ -3,179 +3,228 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Swarm</title>
+  <title>Swarm Download Manager</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="stylesheet" href="./src/style.css" />
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <img src="/logo.png" alt="Swarm Logo" class="brand-logo" />
-        <div class="brand-text">
-          <span class="brand-title">SWARM</span>
-          <span class="brand-version">v0.1.0</span>
-        </div>
-      </div>
-
-      <div class="header-center">
-        <div class="stat-pill">
-          <svg class="icon-stat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-          </svg>
-          <div class="stat-meta">
-            <span class="stat-value" id="global-speed">0.0 KB/s</span>
-            <span class="stat-label">Total Speed</span>
+    <!-- Top Action Toolbar -->
+    <header class="toolbar">
+      <div class="toolbar-left">
+        <button class="tool-btn" id="btn-new-url" title="Add New Download">
+          <div class="tool-icon btn-blue">
+            <i data-lucide="plus"></i>
           </div>
-        </div>
+          <span class="tool-label">New URL</span>
+        </button>
+
+        <button class="tool-btn disabled" id="btn-resume" title="Resume selected download">
+          <div class="tool-icon btn-blue">
+            <i data-lucide="play"></i>
+          </div>
+          <span class="tool-label">Resume</span>
+        </button>
+
+        <button class="tool-btn disabled" id="btn-stop" title="Stop selected download">
+          <div class="tool-icon btn-blue">
+            <i data-lucide="square"></i>
+          </div>
+          <span class="tool-label">Stop</span>
+        </button>
+
+        <button class="tool-btn disabled" id="btn-delete" title="Delete selected download">
+          <div class="tool-icon btn-red">
+            <i data-lucide="x"></i>
+          </div>
+          <span class="tool-label">Delete</span>
+        </button>
       </div>
 
-      <div class="header-right">
-        <div class="status-chip" id="connection-status" title="Connection state to local daemon">
-          <span class="status-indicator"></span>
-          <span class="status-label">Online</span>
-        </div>
-        <button class="btn btn-default" id="btn-settings" title="Settings & Pairing">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-          <span>Settings</span>
+      <div class="toolbar-right">
+        <button class="tool-btn" id="btn-settings" title="Settings">
+          <div class="tool-icon btn-icon-only">
+            <i data-lucide="settings"></i>
+          </div>
+          <span class="tool-label">Settings</span>
         </button>
-        <button class="btn btn-action" id="btn-add-modal">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span>Add URL</span>
+
+        <button class="tool-btn" id="btn-browsers" title="Browser Integration & Extension">
+          <div class="tool-icon btn-icon-only">
+            <i data-lucide="globe"></i>
+          </div>
+          <span class="tool-label">Browsers</span>
+        </button>
+
+        <button class="tool-btn" id="btn-about" title="About Swarm">
+          <div class="tool-icon btn-icon-only">
+            <i data-lucide="info"></i>
+          </div>
+          <span class="tool-label">About</span>
+        </button>
+
+        <button class="tool-btn" id="btn-quit" title="Exit to Tray / Close App">
+          <div class="tool-icon btn-red">
+            <i data-lucide="power"></i>
+          </div>
+          <span class="tool-label">Quit</span>
         </button>
       </div>
     </header>
 
-    <!-- Subheader Toolbar -->
-    <nav class="toolbar">
-      <div class="filter-group" id="filter-tabs">
-        <button class="filter-tab active" data-filter="all">
-          <span>All</span>
-          <span class="count" id="badge-all">0</span>
-        </button>
-        <button class="filter-tab" data-filter="downloading">
-          <span>Active</span>
-          <span class="count" id="badge-active">0</span>
-        </button>
-        <button class="filter-tab" data-filter="completed">
-          <span>Completed</span>
-          <span class="count" id="badge-completed">0</span>
-        </button>
-        <button class="filter-tab" data-filter="paused">
-          <span>Paused</span>
-          <span class="count" id="badge-paused">0</span>
-        </button>
-      </div>
+    <!-- Workspace Split View -->
+    <div class="workspace">
+      <!-- Left Category Sidebar -->
+      <aside class="sidebar">
+        <ul class="tree-menu">
+          <li class="tree-item active" data-category="all">
+            <div class="tree-row">
+              <i data-lucide="folder" class="tree-icon"></i>
+              <span class="tree-label">All Downloads</span>
+            </div>
+            <ul class="tree-sub">
+              <li class="tree-sub-item" data-category="video">
+                <i data-lucide="film" class="tree-icon"></i>
+                <span>Video</span>
+              </li>
+              <li class="tree-sub-item" data-category="audio">
+                <i data-lucide="music" class="tree-icon"></i>
+                <span>Audio</span>
+              </li>
+              <li class="tree-sub-item" data-category="compressed">
+                <i data-lucide="archive" class="tree-icon"></i>
+                <span>Compressed</span>
+              </li>
+              <li class="tree-sub-item" data-category="document">
+                <i data-lucide="file-text" class="tree-icon"></i>
+                <span>Document</span>
+              </li>
+              <li class="tree-sub-item" data-category="application">
+                <i data-lucide="binary" class="tree-icon"></i>
+                <span>Application</span>
+              </li>
+              <li class="tree-sub-item" data-category="misc">
+                <i data-lucide="file" class="tree-icon"></i>
+                <span>Misc</span>
+              </li>
+            </ul>
+          </li>
+          <li class="tree-item" data-category="complete">
+            <div class="tree-row">
+              <i data-lucide="folder-check" class="tree-icon"></i>
+              <span class="tree-label">Complete</span>
+            </div>
+          </li>
+          <li class="tree-item" data-category="incomplete">
+            <div class="tree-row">
+              <i data-lucide="folder-down" class="tree-icon"></i>
+              <span class="tree-label">Incomplete</span>
+            </div>
+          </li>
+        </ul>
+      </aside>
 
-      <div class="toolbar-controls">
-        <button class="control-btn" id="btn-pause-all">Pause All</button>
-        <button class="control-btn" id="btn-clear-completed">Clear Finished</button>
-      </div>
-    </nav>
-
-    <!-- Main List Container -->
-    <main class="content-view">
-      <div class="item-list" id="download-list">
-        <!-- Rendered items -->
-      </div>
-
-      <!-- Empty State -->
-      <div class="empty-placeholder" id="empty-state">
-        <div class="empty-icon-box">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+      <!-- Right Main Table Area -->
+      <section class="main-table-pane">
+        <div class="table-container">
+          <table class="download-table" id="download-table">
+            <thead>
+              <tr>
+                <th class="col-filename">File Name</th>
+                <th class="col-size">Size</th>
+                <th class="col-status">Status</th>
+                <th class="col-speed">Bandwidth</th>
+                <th class="col-eta">Remaining Time</th>
+                <th class="col-date">Date Added</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <!-- Rows rendered by app.ts -->
+            </tbody>
+          </table>
         </div>
-        <p class="empty-headline">Queue is empty</p>
-        <p class="empty-caption">Paste a download URL or trigger downloads from your browser extension.</p>
-        <button class="btn btn-default" id="btn-empty-add">+ Add URL</button>
-      </div>
-    </main>
+      </section>
+    </div>
 
-    <!-- Add Download Modal -->
-    <div class="overlay" id="modal-add">
-      <div class="dialog">
-        <div class="dialog-header">
-          <h2 class="dialog-title">New Download</h2>
-          <button class="icon-close" id="btn-close-modal">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+    <!-- Status Bar -->
+    <footer class="statusbar">
+      <div class="status-left">
+        <span id="status-summary">0 downloads</span>
+      </div>
+      <div class="status-right">
+        <span id="status-speed">0.0 KB/s</span>
+      </div>
+    </footer>
+
+    <!-- Modal: New URL -->
+    <div class="modal-layer" id="modal-url">
+      <div class="compact-dialog">
+        <div class="dialog-titlebar">
+          <span>New Download URL</span>
+          <button class="dialog-x" id="btn-close-url-dialog">&times;</button>
         </div>
-        <form id="form-add-download">
-          <div class="input-block">
-            <label for="input-url">Target URL</label>
+        <form id="form-new-url">
+          <div class="dialog-field">
+            <label for="input-url">URL:</label>
             <textarea id="input-url" rows="3" placeholder="https://..." required></textarea>
           </div>
-          <div class="input-grid">
-            <div class="input-block">
-              <label for="select-connections">Parallel Sockets</label>
-              <select id="select-connections">
-                <option value="4">4 Connections</option>
-                <option value="8" selected>8 Connections (Standard)</option>
-                <option value="12">12 Connections</option>
-                <option value="16">16 Connections</option>
-              </select>
-            </div>
-            <div class="input-block">
-              <label for="input-limit">Rate Limit (KB/s)</label>
-              <input type="number" id="input-limit" placeholder="No limit" min="0" />
-            </div>
+          <div class="dialog-options">
+            <label for="select-sockets">Sockets:</label>
+            <select id="select-sockets">
+              <option value="4">4 connections</option>
+              <option value="8" selected>8 connections</option>
+              <option value="12">12 connections</option>
+              <option value="16">16 connections</option>
+            </select>
           </div>
-          <div class="dialog-footer">
-            <button type="button" class="btn btn-default" id="btn-cancel-modal">Cancel</button>
-            <button type="submit" class="btn btn-action">Start Download</button>
+          <div class="dialog-buttons">
+            <button type="submit" class="std-btn primary">Download Now</button>
+            <button type="button" class="std-btn" id="btn-cancel-url">Cancel</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Settings Drawer -->
-    <div class="overlay" id="drawer-settings">
-      <div class="drawer">
-        <div class="dialog-header">
-          <h2 class="dialog-title">Settings & Extension</h2>
-          <button class="icon-close" id="btn-close-drawer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+    <!-- Modal: Browsers / Extension Pairing -->
+    <div class="modal-layer" id="modal-browsers">
+      <div class="compact-dialog">
+        <div class="dialog-titlebar">
+          <span>Browser Integration</span>
+          <button class="dialog-x" id="btn-close-browsers-dialog">&times;</button>
         </div>
-        <div class="drawer-content">
-          <section class="config-panel">
-            <h3 class="panel-heading">Browser Extension Pairing</h3>
-            <p class="panel-desc">Paste this authentication token into the extension popup:</p>
-            <div class="copy-field">
-              <input type="text" id="token-input" readonly value="" />
-              <button class="btn btn-default btn-compact" id="btn-copy-token">Copy</button>
-            </div>
-            <p class="panel-footnote">Daemon active on <code>127.0.0.1:<span id="active-port">52417</span></code></p>
-          </section>
-
-          <section class="config-panel">
-            <h3 class="panel-heading">Windows Startup</h3>
-            <p class="panel-desc">Auto-start daemon in system tray. Managed via Windows Task Manager &rarr; Startup apps.</p>
-          </section>
-
-          <section class="config-panel">
-            <h3 class="panel-heading">Architecture</h3>
-            <p class="panel-desc">Rust core daemon &middot; Win32 tray &middot; NTFS Sparse file preallocation &middot; Memory budget &lt; 5MB.</p>
-          </section>
+        <div class="dialog-body">
+          <p class="dialog-desc">Install the Swarm extension in your browser, then pair it using this token:</p>
+          <div class="token-copy-box">
+            <input type="text" id="token-input" readonly value="" />
+            <button type="button" class="std-btn" id="btn-copy-token">Copy</button>
+          </div>
+          <p class="dialog-note">Daemon listening on port <strong id="active-port">52417</strong></p>
+          <div class="dialog-buttons">
+            <button type="button" class="std-btn primary" id="btn-close-browsers">Close</button>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Modal: About -->
+    <div class="modal-layer" id="modal-about">
+      <div class="compact-dialog">
+        <div class="dialog-titlebar">
+          <span>About Swarm</span>
+          <button class="dialog-x" id="btn-close-about-dialog">&times;</button>
+        </div>
+        <div class="dialog-body about-box">
+          <img src="/logo.png" alt="Swarm Logo" class="about-logo" />
+          <h3>Swarm Download Manager 0.1.0</h3>
+          <p>Ultra-low memory Rust download manager for Windows.</p>
+          <p class="dialog-note">Target memory: &lt; 5MB &middot; Multi-socket range downloads &middot; Windows Native Integration</p>
+          <div class="dialog-buttons">
+            <button type="button" class="std-btn primary" id="btn-close-about">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script type="module" src="./src/app.ts"></script>

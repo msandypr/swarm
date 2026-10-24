@@ -1,4 +1,23 @@
-// Swarm Download Manager — Studio Dark UI Controller
+import {
+  createIcons,
+  Plus,
+  Play,
+  Square,
+  X,
+  Settings,
+  Globe,
+  Info,
+  Power,
+  Folder,
+  FolderCheck,
+  FolderDown,
+  Film,
+  Music,
+  Archive,
+  FileText,
+  Binary,
+  File as FileIcon,
+} from 'lucide';
 
 interface SegmentProgress {
   index: number;
@@ -21,43 +40,77 @@ interface DownloadItem {
   created_at?: number;
 }
 
-type FilterType = 'all' | 'downloading' | 'completed' | 'paused';
-type ActionType = 'pause' | 'resume' | 'cancel' | 'delete';
+type CategoryType =
+  | 'all'
+  | 'video'
+  | 'audio'
+  | 'compressed'
+  | 'document'
+  | 'application'
+  | 'misc'
+  | 'complete'
+  | 'incomplete';
 
-// Global State
+// State
 let downloads: Map<string, DownloadItem> = new Map();
-let currentFilter: FilterType = 'all';
+let selectedId: string | null = null;
+let currentCategory: CategoryType = 'all';
 let authToken: string = '';
 let activePort: number = 52417;
 
 // DOM Elements
-const elDownloadList = document.getElementById('download-list') as HTMLDivElement;
-const elEmptyState = document.getElementById('empty-state') as HTMLDivElement;
-const elGlobalSpeed = document.getElementById('global-speed') as HTMLSpanElement;
-const elConnStatus = document.getElementById('connection-status') as HTMLDivElement;
+const elTableBody = document.getElementById('table-body') as HTMLTableSectionElement;
+const elStatusSummary = document.getElementById('status-summary') as HTMLSpanElement;
+const elStatusSpeed = document.getElementById('status-speed') as HTMLSpanElement;
 
-const elBadgeAll = document.getElementById('badge-all') as HTMLSpanElement;
-const elBadgeActive = document.getElementById('badge-active') as HTMLSpanElement;
-const elBadgeCompleted = document.getElementById('badge-completed') as HTMLSpanElement;
-const elBadgePaused = document.getElementById('badge-paused') as HTMLSpanElement;
+// Top Buttons
+const btnResume = document.getElementById('btn-resume') as HTMLButtonElement;
+const btnStop = document.getElementById('btn-stop') as HTMLButtonElement;
+const btnDelete = document.getElementById('btn-delete') as HTMLButtonElement;
 
-// Modal & Drawer
-const modalAdd = document.getElementById('modal-add') as HTMLDivElement;
-const formAdd = document.getElementById('form-add-download') as HTMLFormElement;
+// Dialogs
+const modalUrl = document.getElementById('modal-url') as HTMLDivElement;
+const formUrl = document.getElementById('form-new-url') as HTMLFormElement;
 const inputUrl = document.getElementById('input-url') as HTMLTextAreaElement;
-const selectConnections = document.getElementById('select-connections') as HTMLSelectElement;
+const selectSockets = document.getElementById('select-sockets') as HTMLSelectElement;
 
-const drawerSettings = document.getElementById('drawer-settings') as HTMLDivElement;
+const modalBrowsers = document.getElementById('modal-browsers') as HTMLDivElement;
 const tokenInput = document.getElementById('token-input') as HTMLInputElement;
 const btnCopyToken = document.getElementById('btn-copy-token') as HTMLButtonElement;
 const activePortEl = document.getElementById('active-port') as HTMLElement;
 
-// Initialize App
+const modalAbout = document.getElementById('modal-about') as HTMLDivElement;
+
 function init() {
   extractToken();
+  initLucide();
   setupEventListeners();
   fetchInitialData();
   connectEventSource();
+}
+
+function initLucide() {
+  createIcons({
+    icons: {
+      Plus,
+      Play,
+      Square,
+      X,
+      Settings,
+      Globe,
+      Info,
+      Power,
+      Folder,
+      FolderCheck,
+      FolderDown,
+      Film,
+      Music,
+      Archive,
+      FileText,
+      Binary,
+      File: FileIcon,
+    },
+  });
 }
 
 function extractToken() {
@@ -72,88 +125,120 @@ function extractToken() {
     authToken = localStorage.getItem('swarm_token') || '';
   }
 
-  tokenInput.value = authToken || 'No token active';
+  tokenInput.value = authToken;
 }
 
 function setupEventListeners() {
-  document.getElementById('btn-add-modal')?.addEventListener('click', openAddModal);
-  document.getElementById('btn-empty-add')?.addEventListener('click', openAddModal);
-  document.getElementById('btn-close-modal')?.addEventListener('click', closeAddModal);
-  document.getElementById('btn-cancel-modal')?.addEventListener('click', closeAddModal);
+  // New URL
+  document.getElementById('btn-new-url')?.addEventListener('click', () => {
+    modalUrl.classList.add('open');
+    inputUrl.focus();
 
-  formAdd?.addEventListener('submit', async (e) => {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then((text) => {
+        if (text && (text.startsWith('http://') || text.startsWith('https://'))) {
+          inputUrl.value = text;
+        }
+      }).catch(() => {});
+    }
+  });
+
+  document.getElementById('btn-close-url-dialog')?.addEventListener('click', () => {
+    modalUrl.classList.remove('open');
+  });
+  document.getElementById('btn-cancel-url')?.addEventListener('click', () => {
+    modalUrl.classList.remove('open');
+  });
+
+  formUrl.addEventListener('submit', async (e) => {
     e.preventDefault();
     const url = inputUrl.value.trim();
-    const connections = parseInt(selectConnections.value) || 8;
+    const connections = parseInt(selectSockets.value) || 8;
     if (!url) return;
 
     await addDownload(url, connections);
-    closeAddModal();
+    modalUrl.classList.remove('open');
     inputUrl.value = '';
   });
 
-  document.getElementById('btn-settings')?.addEventListener('click', () => {
-    drawerSettings.classList.add('open');
-  });
-  document.getElementById('btn-close-drawer')?.addEventListener('click', () => {
-    drawerSettings.classList.remove('open');
+  // Top action bar actions
+  btnResume.addEventListener('click', () => {
+    if (selectedId) triggerAction(selectedId, 'resume');
   });
 
-  btnCopyToken?.addEventListener('click', () => {
+  btnStop.addEventListener('click', () => {
+    if (selectedId) triggerAction(selectedId, 'pause');
+  });
+
+  btnDelete.addEventListener('click', () => {
+    if (selectedId) {
+      if (confirm('Delete this download?')) {
+        deleteDownload(selectedId, true);
+      }
+    }
+  });
+
+  // Browsers Dialog
+  document.getElementById('btn-browsers')?.addEventListener('click', () => {
+    modalBrowsers.classList.add('open');
+  });
+  document.getElementById('btn-close-browsers-dialog')?.addEventListener('click', () => {
+    modalBrowsers.classList.remove('open');
+  });
+  document.getElementById('btn-close-browsers')?.addEventListener('click', () => {
+    modalBrowsers.classList.remove('open');
+  });
+
+  btnCopyToken.addEventListener('click', () => {
     if (authToken) {
       navigator.clipboard.writeText(authToken);
       btnCopyToken.textContent = 'Copied';
-      setTimeout(() => (btnCopyToken.textContent = 'Copy'), 2000);
+      setTimeout(() => (btnCopyToken.textContent = 'Copy'), 1500);
     }
   });
 
-  document.querySelectorAll('.filter-tab').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-tab').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      const filterVal = btn.getAttribute('data-filter');
-      if (filterVal === 'all' || filterVal === 'downloading' || filterVal === 'completed' || filterVal === 'paused') {
-        currentFilter = filterVal;
+  // About Dialog
+  document.getElementById('btn-about')?.addEventListener('click', () => {
+    modalAbout.classList.add('open');
+  });
+  document.getElementById('btn-close-about-dialog')?.addEventListener('click', () => {
+    modalAbout.classList.remove('open');
+  });
+  document.getElementById('btn-close-about')?.addEventListener('click', () => {
+    modalAbout.classList.remove('open');
+  });
+
+  // Quit / Close
+  document.getElementById('btn-quit')?.addEventListener('click', () => {
+    window.close();
+  });
+
+  // Tree category selection
+  document.querySelectorAll('[data-category]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('[data-category]').forEach((c) => c.classList.remove('active'));
+      el.classList.add('active');
+
+      const cat = el.getAttribute('data-category');
+      if (
+        cat === 'all' ||
+        cat === 'video' ||
+        cat === 'audio' ||
+        cat === 'compressed' ||
+        cat === 'document' ||
+        cat === 'application' ||
+        cat === 'misc' ||
+        cat === 'complete' ||
+        cat === 'incomplete'
+      ) {
+        currentCategory = cat;
       }
-      renderList();
+      renderTable();
     });
   });
-
-  document.getElementById('btn-pause-all')?.addEventListener('click', async () => {
-    for (const [id, item] of downloads) {
-      if (item.status === 'Downloading') {
-        await triggerAction(id, 'pause');
-      }
-    }
-  });
-
-  document.getElementById('btn-clear-completed')?.addEventListener('click', async () => {
-    for (const [id, item] of downloads) {
-      if (item.status === 'Completed') {
-        await deleteDownload(id, false);
-      }
-    }
-  });
 }
 
-function openAddModal() {
-  modalAdd.classList.add('open');
-  inputUrl.focus();
-
-  if (navigator.clipboard && navigator.clipboard.readText) {
-    navigator.clipboard.readText().then((text) => {
-      if (text && (text.startsWith('http://') || text.startsWith('https://'))) {
-        inputUrl.value = text;
-      }
-    }).catch(() => {});
-  }
-}
-
-function closeAddModal() {
-  modalAdd.classList.remove('open');
-}
-
-// API Calls
 async function fetchInitialData() {
   try {
     const resPing = await fetch('/api/ping');
@@ -171,10 +256,10 @@ async function fetchInitialData() {
       const list: DownloadItem[] = await res.json();
       downloads.clear();
       list.forEach((item) => downloads.set(item.id, item));
-      renderList();
+      renderTable();
     }
   } catch (err) {
-    console.error('Failed to fetch initial downloads:', err);
+    console.error('Fetch error:', err);
   }
 }
 
@@ -192,14 +277,14 @@ async function addDownload(url: string, connections: number) {
     if (res.ok) {
       await fetchInitialData();
     } else {
-      alert('Failed to start download: ' + (await res.text()));
+      alert('Failed: ' + (await res.text()));
     }
   } catch {
-    alert('Network error when adding download');
+    alert('Network error adding download');
   }
 }
 
-async function triggerAction(id: string, action: ActionType) {
+async function triggerAction(id: string, action: 'pause' | 'resume' | 'cancel') {
   try {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
@@ -214,10 +299,11 @@ async function triggerAction(id: string, action: ActionType) {
     if (item && action === 'pause') {
       item.status = 'Paused';
       item.speed_bytes_per_sec = 0;
-      updateCardLive(item);
+      updateRowLive(item);
+      updateSelectionButtons();
     }
   } catch (err) {
-    console.error('Failed to trigger action:', err);
+    console.error('Action error:', err);
   }
 }
 
@@ -232,20 +318,16 @@ async function deleteDownload(id: string, deleteFile: boolean = false) {
     });
 
     downloads.delete(id);
-    renderList();
+    if (selectedId === id) selectedId = null;
+    renderTable();
   } catch (err) {
-    console.error('Failed to delete download:', err);
+    console.error('Delete error:', err);
   }
 }
 
-// SSE Progress Event Stream
 function connectEventSource() {
   const url = authToken ? `/api/events?t=${encodeURIComponent(authToken)}` : '/api/events';
   const es = new EventSource(url);
-
-  es.onopen = () => {
-    elConnStatus.innerHTML = '<span class="status-indicator"></span><span class="status-label">Online</span>';
-  };
 
   es.addEventListener('progress', (e) => {
     try {
@@ -267,7 +349,7 @@ function connectEventSource() {
           segments: data.segments,
         };
         downloads.set(id, item);
-        renderList();
+        renderTable();
       } else {
         item.filename = data.filename || item.filename;
         item.total_size = data.total_size || item.total_size;
@@ -276,181 +358,134 @@ function connectEventSource() {
         item.speed_bytes_per_sec = data.speed_bytes_per_sec;
         item.eta_seconds = data.eta_seconds;
         item.segments = data.segments;
-        updateCardLive(item);
+        updateRowLive(item);
       }
 
       updateGlobalMetrics();
     } catch (err) {
-      console.error('SSE parse error:', err);
+      console.error('SSE error:', err);
     }
   });
-
-  es.onerror = () => {
-    elConnStatus.innerHTML = '<span class="status-indicator" style="background:#fbbf24"></span><span class="status-label" style="color:#fbbf24">Reconnecting</span>';
-  };
 }
 
-// Render Functions
-function renderList() {
+function renderTable() {
   const items = Array.from(downloads.values());
 
-  const activeCount = items.filter((i) => i.status === 'Downloading').length;
-  const completedCount = items.filter((i) => i.status === 'Completed').length;
-  const pausedCount = items.filter((i) => i.status === 'Paused').length;
-
-  elBadgeAll.textContent = items.length.toString();
-  elBadgeActive.textContent = activeCount.toString();
-  elBadgeCompleted.textContent = completedCount.toString();
-  elBadgePaused.textContent = pausedCount.toString();
-
   const filtered = items.filter((item) => {
-    if (currentFilter === 'downloading') return item.status === 'Downloading';
-    if (currentFilter === 'completed') return item.status === 'Completed';
-    if (currentFilter === 'paused') return item.status === 'Paused';
+    if (currentCategory === 'complete') return item.status === 'Completed';
+    if (currentCategory === 'incomplete') return item.status !== 'Completed';
+
+    if (currentCategory === 'all') return true;
+
+    const ext = (item.filename.split('.').pop() || '').toLowerCase();
+    if (currentCategory === 'video') return ['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext);
+    if (currentCategory === 'audio') return ['mp3', 'wav', 'flac', 'aac'].includes(ext);
+    if (currentCategory === 'compressed') return ['zip', 'rar', '7z', 'tar', 'gz', 'iso'].includes(ext);
+    if (currentCategory === 'document') return ['pdf', 'doc', 'docx', 'txt', 'epub'].includes(ext);
+    if (currentCategory === 'application') return ['exe', 'msi', 'bin'].includes(ext);
+    if (currentCategory === 'misc') {
+      return !['mp4', 'mkv', 'avi', 'mov', 'webm', 'mp3', 'wav', 'flac', 'aac', 'zip', 'rar', '7z', 'tar', 'gz', 'iso', 'pdf', 'doc', 'docx', 'txt', 'epub', 'exe', 'msi', 'bin'].includes(ext);
+    }
     return true;
   });
 
-  if (filtered.length === 0) {
-    elDownloadList.innerHTML = '';
-    elEmptyState.style.display = 'flex';
-    return;
-  }
-
-  elEmptyState.style.display = 'none';
-  elDownloadList.innerHTML = '';
+  elTableBody.innerHTML = '';
   filtered.forEach((item) => {
-    elDownloadList.appendChild(createCardElement(item));
+    const tr = document.createElement('tr');
+    tr.className = `download-row ${selectedId === item.id ? 'selected' : ''}`;
+    tr.id = `row-${item.id}`;
+
+    tr.addEventListener('click', () => {
+      document.querySelectorAll('.download-row').forEach((r) => r.classList.remove('selected'));
+      tr.classList.add('selected');
+      selectedId = item.id;
+      updateSelectionButtons();
+    });
+
+    tr.innerHTML = getRowHtml(item);
+    elTableBody.appendChild(tr);
   });
 
+  initLucide();
+  updateSelectionButtons();
   updateGlobalMetrics();
 }
 
-function createCardElement(item: DownloadItem): HTMLElement {
-  const card = document.createElement('div');
-  card.className = 'download-card';
-  card.id = `card-${item.id}`;
+function updateRowLive(item: DownloadItem) {
+  const tr = document.getElementById(`row-${item.id}`);
+  if (!tr) return;
 
-  const iconSvg = getFileIconSvg(item.filename);
-  const totalStr = item.total_size ? formatBytes(item.total_size) : 'Unknown';
-  const downloadedStr = formatBytes(item.downloaded_bytes);
-  const percent = item.total_size ? Math.min(100, Math.round((item.downloaded_bytes / item.total_size) * 100)) : 0;
-  const speedStr = item.status === 'Downloading' && item.speed_bytes_per_sec ? formatBytes(item.speed_bytes_per_sec) + '/s' : '--';
-  const etaStr = item.status === 'Downloading' && item.eta_seconds !== undefined ? formatEta(item.eta_seconds) : '--';
+  tr.innerHTML = getRowHtml(item);
+  initLucide();
+}
 
-  card.innerHTML = `
-    <div class="card-top">
-      <div class="file-meta-col">
-        <div class="file-type-icon">${iconSvg}</div>
-        <div class="file-title-wrap">
-          <span class="file-title" title="${escapeHtml(item.filename)}">${escapeHtml(item.filename || 'Starting download...')}</span>
-          <span class="file-source" title="${escapeHtml(item.url)}">${escapeHtml(item.url)}</span>
-        </div>
-      </div>
-      <div class="card-action-bar">
-        ${
-          item.status === 'Downloading'
-            ? `<button class="btn-tool" data-action="pause" data-id="${item.id}" title="Pause">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-               </button>`
-            : item.status === 'Paused'
-            ? `<button class="btn-tool" data-action="resume" data-id="${item.id}" title="Resume">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-               </button>`
-            : ''
-        }
-        <button class="btn-tool remove" data-action="delete" data-id="${item.id}" title="Delete">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        </button>
-      </div>
-    </div>
+function getRowHtml(item: DownloadItem): string {
+  const iconName = getFileLucideIcon(item.filename);
+  const sizeStr = item.total_size ? formatBytes(item.total_size) : formatBytes(item.downloaded_bytes);
 
-    <div class="metrics-row">
-      <div class="metrics-left">
-        <span>${downloadedStr} of ${totalStr} (${percent}%)</span>
-        <span style="color:${getStatusColor(item.status)}">${item.status}</span>
-      </div>
-      <div class="metrics-right">
-        <span class="metric-rate">${speedStr}</span>
-        <span>ETA: ${etaStr}</span>
-      </div>
-    </div>
+  let statusText = 'Complete';
+  let statusClass = 'status-done';
 
-    <div class="segment-bar" id="bar-${item.id}">
-      ${renderSegmentsHtml(item)}
-    </div>
+  if (item.status === 'Downloading') {
+    const pct = item.total_size ? Math.min(100, Math.round((item.downloaded_bytes / item.total_size) * 100)) : 0;
+    statusText = `Downloading ( ${pct}% )`;
+    statusClass = 'status-active';
+  } else if (item.status === 'Paused') {
+    const pct = item.total_size ? Math.min(100, Math.round((item.downloaded_bytes / item.total_size) * 100)) : 0;
+    statusText = `Paused ( ${pct}% )`;
+    statusClass = 'status-paused';
+  } else if (item.status === 'Failed') {
+    statusText = 'Error ( 0% )';
+    statusClass = 'status-error';
+  }
+
+  const speedStr = item.status === 'Downloading' && item.speed_bytes_per_sec ? formatBytes(item.speed_bytes_per_sec) + '/s' : '';
+  const etaStr = item.status === 'Downloading' && item.eta_seconds !== undefined ? formatEta(item.eta_seconds) : '';
+  const dateStr = formatDate(item.created_at);
+
+  return `
+    <td class="col-filename">
+      <div class="file-cell">
+        <i data-lucide="${iconName}"></i>
+        <span class="file-text" title="${escapeHtml(item.filename)}">${escapeHtml(item.filename || 'Starting download...')}</span>
+      </div>
+    </td>
+    <td class="col-size mono-num">${sizeStr}</td>
+    <td class="col-status ${statusClass}">${statusText}</td>
+    <td class="col-speed mono-num">${speedStr}</td>
+    <td class="col-eta mono-num">${etaStr}</td>
+    <td class="col-date mono-num">${dateStr}</td>
   `;
-
-  card.querySelectorAll('[data-action]').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const target = e.currentTarget as HTMLElement;
-      const action = target.getAttribute('data-action');
-      const id = target.getAttribute('data-id');
-      if (!id) return;
-
-      if (action === 'delete') {
-        if (confirm('Delete this download record?')) deleteDownload(id, true);
-      } else if (action === 'pause' || action === 'resume' || action === 'cancel') {
-        triggerAction(id, action);
-      }
-    });
-  });
-
-  return card;
 }
 
-function updateCardLive(item: DownloadItem) {
-  const card = document.getElementById(`card-${item.id}`);
-  if (!card) return;
-
-  const totalStr = item.total_size ? formatBytes(item.total_size) : 'Unknown';
-  const downloadedStr = formatBytes(item.downloaded_bytes);
-  const percent = item.total_size ? Math.min(100, Math.round((item.downloaded_bytes / item.total_size) * 100)) : 0;
-  const speedStr = item.status === 'Downloading' && item.speed_bytes_per_sec ? formatBytes(item.speed_bytes_per_sec) + '/s' : '--';
-  const etaStr = item.status === 'Downloading' && item.eta_seconds !== undefined ? formatEta(item.eta_seconds) : '--';
-
-  const elFileName = card.querySelector('.file-title');
-  if (elFileName && item.filename) elFileName.textContent = item.filename;
-
-  const elMetricsLeft = card.querySelector('.metrics-left');
-  if (elMetricsLeft) {
-    elMetricsLeft.innerHTML = `
-      <span>${downloadedStr} of ${totalStr} (${percent}%)</span>
-      <span style="color:${getStatusColor(item.status)}">${item.status}</span>
-    `;
+function updateSelectionButtons() {
+  if (!selectedId) {
+    btnResume.classList.add('disabled');
+    btnStop.classList.add('disabled');
+    btnDelete.classList.add('disabled');
+    return;
   }
 
-  const elRate = card.querySelector('.metric-rate');
-  if (elRate) elRate.textContent = speedStr;
-
-  const elBar = document.getElementById(`bar-${item.id}`);
-  if (elBar) {
-    elBar.innerHTML = renderSegmentsHtml(item);
-  }
-}
-
-function renderSegmentsHtml(item: DownloadItem): string {
-  if (item.status === 'Completed') {
-    return `<div class="segment-track" style="flex:1"><div class="segment-solid-fill done" style="width:100%"></div></div>`;
+  const item = downloads.get(selectedId);
+  if (!item) {
+    btnResume.classList.add('disabled');
+    btnStop.classList.add('disabled');
+    btnDelete.classList.add('disabled');
+    return;
   }
 
-  if (!item.segments || item.segments.length === 0) {
-    const p = item.total_size ? Math.min(100, (item.downloaded_bytes / item.total_size) * 100) : 0;
-    const fillClass = item.status === 'Paused' ? 'paused' : '';
-    return `<div class="segment-track" style="flex:1"><div class="segment-solid-fill ${fillClass}" style="width:${p}%"></div></div>`;
-  }
+  btnDelete.classList.remove('disabled');
 
-  const fillClass = item.status === 'Paused' ? 'paused' : '';
-  return item.segments
-    .map((seg) => {
-      const segSize = seg.end - seg.start + 1;
-      const segPercent = segSize > 0 ? Math.min(100, (seg.downloaded / segSize) * 100) : 0;
-      return `
-        <div class="segment-track" style="flex:${segSize}">
-          <div class="segment-solid-fill ${fillClass}" style="width:${segPercent}%"></div>
-        </div>
-      `;
-    })
-    .join('');
+  if (item.status === 'Downloading') {
+    btnResume.classList.add('disabled');
+    btnStop.classList.remove('disabled');
+  } else if (item.status === 'Paused') {
+    btnResume.classList.remove('disabled');
+    btnStop.classList.add('disabled');
+  } else {
+    btnResume.classList.add('disabled');
+    btnStop.classList.add('disabled');
+  }
 }
 
 function updateGlobalMetrics() {
@@ -460,10 +495,21 @@ function updateGlobalMetrics() {
       totalSpeed += item.speed_bytes_per_sec;
     }
   }
-  elGlobalSpeed.textContent = totalSpeed > 0 ? `${formatBytes(totalSpeed)}/s` : '0.0 KB/s';
+
+  elStatusSpeed.textContent = totalSpeed > 0 ? `${formatBytes(totalSpeed)}/s` : '0.0 KB/s';
+  elStatusSummary.textContent = `${downloads.size} downloads`;
 }
 
-// Helpers
+function getFileLucideIcon(filename?: string): string {
+  const ext = (filename?.split('.').pop() || '').toLowerCase();
+  if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) return 'film';
+  if (['mp3', 'wav', 'flac', 'aac'].includes(ext)) return 'music';
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'iso'].includes(ext)) return 'archive';
+  if (['pdf', 'doc', 'docx', 'txt', 'epub'].includes(ext)) return 'file-text';
+  if (['exe', 'msi', 'bin'].includes(ext)) return 'binary';
+  return 'file';
+}
+
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return '0 B';
   const k = 1024;
@@ -482,36 +528,15 @@ function formatEta(seconds: number): string {
   return `${hours}h ${mins % 60}m`;
 }
 
-function getStatusColor(status: string): string {
-  switch (status) {
-    case 'Downloading': return 'var(--fill-active)';
-    case 'Completed': return 'var(--fill-completed)';
-    case 'Paused': return 'var(--fill-paused)';
-    case 'Failed': return 'var(--fill-failed)';
-    default: return 'var(--text-muted)';
-  }
-}
-
-function getFileIconSvg(filename?: string): string {
-  const ext = filename?.split('.').pop()?.toLowerCase() || '';
-
-  if (['zip', 'rar', '7z', 'tar', 'gz', 'iso'].includes(ext)) {
-    // Archive
-    return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`;
-  }
-
-  if (['mp4', 'mkv', 'avi', 'mov', 'webm', 'mp3', 'wav', 'flac'].includes(ext)) {
-    // Media
-    return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>`;
-  }
-
-  if (['exe', 'msi', 'bin'].includes(ext)) {
-    // Binary
-    return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>`;
-  }
-
-  // Document default
-  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`;
+function formatDate(timestamp?: number): string {
+  const d = timestamp ? new Date(timestamp * 1000) : new Date();
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const m = months[d.getMonth()];
+  const day = d.getDate();
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  const sec = String(d.getSeconds()).padStart(2, '0');
+  return `${m} ${day} ${h}:${min}:${sec}`;
 }
 
 function escapeHtml(text?: string): string {
