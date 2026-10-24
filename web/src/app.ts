@@ -185,14 +185,23 @@ function extractToken() {
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const tokenParam = urlParams.get('t');
+    const actionParam = urlParams.get('action');
+    const urlTarget = urlParams.get('url');
 
     if (tokenParam) {
       authToken = tokenParam;
       localStorage.setItem('swarm_token', tokenParam);
-      window.history.replaceState({}, document.title, window.location.pathname);
     } else {
       authToken = localStorage.getItem('swarm_token') || '';
     }
+
+    if (actionParam === 'confirm' && urlTarget) {
+      setTimeout(() => {
+        openConfirmModal(decodeURIComponent(urlTarget));
+      }, 100);
+    }
+
+    window.history.replaceState({}, document.title, window.location.pathname);
   } catch (err) {
     console.warn('Error reading token from storage/url:', err);
   }

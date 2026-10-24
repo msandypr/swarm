@@ -318,13 +318,13 @@ async fn handle_ext_add(
     Json(payload): Json<ExtAddDownloadRequest>,
 ) -> impl IntoResponse {
     state.queue.broadcast_incoming(
-        payload.url,
+        payload.url.clone(),
         payload.suggested_filename,
         payload.referrer,
         payload.cookie,
     );
-    // Bring Swarm to foreground (or launch if closed)
-    crate::tray::focus_or_open_ui();
+    // Bring Swarm to foreground (or launch if closed) with download URL
+    crate::tray::focus_or_open_ui_with_url(&payload.url);
 
     Json(serde_json::json!({ "status": "intercepted" }))
 }

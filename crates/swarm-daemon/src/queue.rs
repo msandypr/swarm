@@ -102,6 +102,16 @@ impl QueueManager {
         headers: Option<HeaderMap>,
         connections: Option<usize>,
     ) -> Result<String, String> {
+        // Prevent duplicate download of the same active URL
+        {
+            let inner = self.inner.lock().await;
+            for rec in inner.store.get_all() {
+                if rec.url == url && (rec.status == DownloadRecordStatus::Downloading || rec.status == DownloadRecordStatus::Queued) {
+                    return Ok(rec.id);
+                }
+            }
+        }
+
         let id = format!(
             "d_{}",
             SystemTime::now()

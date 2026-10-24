@@ -11,14 +11,16 @@ use windows_sys::Win32::UI::Shell::{
     ShellExecuteW, Shell_NotifyIconW, NIF_ICON, NIF_INFO, NIF_MESSAGE, NIF_TIP, NIIF_INFO,
     NIM_ADD, NIM_DELETE, NIM_MODIFY, NOTIFYICONDATAW,
 };
+use windows_sys::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    AppendMenuW, CreateIconFromResourceEx, CreatePopupMenu, CreateWindowExW, DefWindowProcW,
-    DestroyMenu, DestroyWindow, DispatchMessageW, EnumWindows, GetCursorPos, GetMessageW,
-    GetWindowTextW, LoadIconW, PostMessageW, PostQuitMessage, RegisterClassW,
-    RegisterWindowMessageW, SetForegroundWindow, ShowWindow, TrackPopupMenu, TranslateMessage,
-    CS_HREDRAW, CS_VREDRAW, HICON, HMENU, IDI_APPLICATION, MF_SEPARATOR, MF_STRING, MSG,
-    SW_SHOWNORMAL, TPM_BOTTOMALIGN, TPM_RIGHTBUTTON, WM_APP, WM_COMMAND, WM_DESTROY,
-    WM_LBUTTONDBLCLK, WM_LBUTTONUP, WM_NULL, WM_RBUTTONUP, WNDCLASSW,
+    AppendMenuW, BringWindowToTop, CreateIconFromResourceEx, CreatePopupMenu, CreateWindowExW,
+    DefWindowProcW, DestroyMenu, DestroyWindow, DispatchMessageW, EnumWindows, GetCursorPos,
+    GetForegroundWindow, GetMessageW, GetWindowTextW, GetWindowThreadProcessId, LoadIconW,
+    PostMessageW, PostQuitMessage, RegisterClassW, RegisterWindowMessageW, SetForegroundWindow,
+    ShowWindow, TrackPopupMenu, TranslateMessage, CS_HREDRAW, CS_VREDRAW, HICON, HMENU,
+    IDI_APPLICATION, MF_SEPARATOR, MF_STRING, MSG, SW_SHOWNORMAL, TPM_BOTTOMALIGN,
+    TPM_RIGHTBUTTON, WM_APP, WM_COMMAND, WM_DESTROY, WM_LBUTTONDBLCLK, WM_LBUTTONUP, WM_NULL,
+    WM_RBUTTONUP, WNDCLASSW,
 };
 
 use crate::single_instance::{SWARM_WINDOW_CLASS, WM_SWARM_OPEN_UI};
@@ -266,19 +268,53 @@ unsafe extern "system" fn enum_windows_callback(hwnd: HWND, lparam: LPARAM) -> i
     1 // continue
 }
 
+#[allow(dead_code)]
 pub fn focus_or_open_ui() {
+    focus_or_open_ui_with_url("");
+}
+
+pub fn focus_or_open_ui_with_url(target_url: &str) {
     let mut found_hwnd: HWND = null_mut();
     unsafe {
         EnumWindows(Some(enum_windows_callback), &mut found_hwnd as *mut HWND as LPARAM);
         if !found_hwnd.is_null() {
-            ShowWindow(found_hwnd, 9); // SW_RESTORE
-            SetForegroundWindow(found_hwnd);
+            let fg_hwnd = GetForegroundWindow();
+            let fg_thread = GetWindowThreadProcessId(fg_hwnd, null_mut());
+            let current_thread = GetCurrentThreadId();
+
+            if fg_thread != current_thread && fg_thread != 0 {
+                AttachThreadInput(current_thread, fg_thread, 1);
+                BringWindowToTop(found_hwnd);
+                ShowWindow(found_hwnd, 9); // SW_RESTORE
+                SetForegroundWindow(found_hwnd);
+                AttachThreadInput(current_thread, fg_thread, 0);
+            } else {
+                BringWindowToTop(found_hwnd);
+                ShowWindow(found_hwnd, 9);
+                SetForegroundWindow(found_hwnd);
+            }
             return;
         }
     }
 
     // If window not yet open, launch it
-    open_ui(get_ui_url());
+    if target_url.is_empty() {
+        open_ui(get_ui_url());
+    } else {
+        let full_url = format!("{}&action=confirm&url={}", get_ui_url(), urlencoding_simple(target_url));
+        open_ui(&full_url);
+    }
+}
+
+fn urlencoding_simple(s: &str) -> String {
+    let mut out = String::with_capacity(s.len() * 3);
+    for b in s.bytes() {
+        match b {
+            b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => out.push(b as char),
+            _ => out.push_str(&format!("%{:02X}", b)),
+        }
+    }
+    out
 }
 
 pub fn open_folder_in_explorer(path: &str) {
