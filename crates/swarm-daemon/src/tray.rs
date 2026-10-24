@@ -254,6 +254,22 @@ pub fn open_folder_in_explorer(path: &str) {
     let _ = std::process::Command::new("explorer.exe").arg(clean_path).spawn();
 }
 
+pub fn open_file_in_shell(path: &str) {
+    let clean_path = path.strip_prefix(r"\\?\").unwrap_or(path);
+    unsafe {
+        let path_wide = to_wide(clean_path);
+        let open_str = to_wide("open");
+        windows_sys::Win32::UI::Shell::ShellExecuteW(
+            null_mut(),
+            open_str.as_ptr(),
+            path_wide.as_ptr(),
+            null(),
+            null(),
+            windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL,
+        );
+    }
+}
+
 pub fn open_browser_extensions_page(browser: &str) -> bool {
     let (exe_paths, url) = match browser {
         "chrome" => (

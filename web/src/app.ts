@@ -39,7 +39,8 @@ let currentCategory: CategoryType = 'all';
 let authToken: string = '';
 let activePort: number = 52417;
 let targetDeleteId: string | null = null;
-
+let pendingDownloadUrl: string = '';
+let activeSceneDownloadId: string | null = null;
 function openDeleteModal(id: string) {
   targetDeleteId = id;
   const item = downloads.get(id);
@@ -67,6 +68,110 @@ async function openDownloadFolder(id: string) {
     });
   } catch (err) {
     console.error('Failed to open folder:', err);
+  }
+}
+
+async function openDownloadFile(id: string) {
+  try {
+    const headers: Record<string, string> = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    await fetch(`/api/downloads/${id}/open-file`, {
+      method: 'POST',
+      headers,
+    });
+  } catch (err) {
+    console.error('Failed to open file:', err);
+  }
+}
+
+async function openConfirmModal(url: string) {
+  pendingDownloadUrl = url;
+  const modalConfirm = document.getElementById('modal-confirm');
+  const filenameEl = document.getElementById('confirm-filename');
+  const filesizeEl = document.getElementById('confirm-filesize');
+
+  if (filenameEl) filenameEl.textContent = url.split('/').pop()?.split('?')[0] || 'Resolving file name...';
+  if (filesizeEl) filesizeEl.textContent = 'Checking size...';
+
+  modalConfirm?.classList.add('open');
+
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    const res = await fetch('/api/preflight', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ url }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (filenameEl && data.filename) filenameEl.textContent = data.filename;
+      if (filesizeEl) filesizeEl.textContent = data.total_size ? formatBytes(data.total_size) : 'Unknown size';
+    }
+  } catch {
+    // continue with defaults
+  }
+}
+
+function openDownloadScene(id: string) {
+  activeSceneDownloadId = id;
+  const modalScene = document.getElementById('modal-scene');
+  const item = downloads.get(id);
+  if (item) {
+    updateSceneModalLive(item);
+  }
+  modalScene?.classList.add('open');
+}
+
+function updateSceneModalLive(item: DownloadItem) {
+  const filenameEl = document.getElementById('scene-filename');
+  const tagEl = document.getElementById('scene-status-tag');
+  const sizeInfoEl = document.getElementById('scene-size-info');
+  const speedEl = document.getElementById('scene-speed');
+  const etaEl = document.getElementById('scene-eta');
+  const resumeEl = document.getElementById('scene-resume');
+  const barEl = document.getElementById('scene-progress-bar');
+  const titlebarEl = document.getElementById('scene-titlebar');
+  const actionsActive = document.getElementById('scene-actions-active');
+  const actionsComplete = document.getElementById('scene-actions-complete');
+  const btnPause = document.getElementById('btn-scene-pause');
+
+  if (filenameEl && item.filename) filenameEl.textContent = item.filename;
+
+  const totalStr = item.total_size ? formatBytes(item.total_size) : 'Unknown';
+  const downloadedStr = formatBytes(item.downloaded_bytes);
+  const pct = item.total_size ? Math.min(100, Math.round((item.downloaded_bytes / item.total_size) * 100)) : 0;
+
+  if (sizeInfoEl) sizeInfoEl.textContent = `${downloadedStr} / ${totalStr} (${pct}%)`;
+
+  const speedStr = item.status === 'Downloading' && item.speed_bytes_per_sec ? formatBytes(item.speed_bytes_per_sec) + '/s' : '0.0 KB/s';
+  const etaStr = item.status === 'Downloading' && item.eta_seconds !== undefined ? formatEta(item.eta_seconds) : '—';
+
+  if (speedEl) speedEl.textContent = speedStr;
+  if (etaEl) etaEl.textContent = etaStr;
+  if (resumeEl) resumeEl.textContent = 'Yes (HTTP Range Supported)';
+
+  if (item.status === 'Completed') {
+    if (tagEl) {
+      tagEl.textContent = 'Complete';
+      tagEl.style.color = 'var(--status-complete)';
+    }
+    if (titlebarEl) titlebarEl.textContent = 'Download Complete';
+    if (actionsActive) actionsActive.style.display = 'none';
+    if (actionsComplete) actionsComplete.style.display = 'flex';
+  } else {
+    if (tagEl) {
+      tagEl.textContent = item.status;
+      tagEl.style.color = item.status === 'Paused' ? 'var(--status-paused)' : 'var(--status-active)';
+    }
+    if (titlebarEl) titlebarEl.textContent = item.status === 'Paused' ? 'Paused' : 'Downloading...';
+    if (btnPause) btnPause.textContent = item.status === 'Paused' ? 'Resume' : 'Pause';
+    if (actionsActive) actionsActive.style.display = 'flex';
+    if (actionsComplete) actionsComplete.style.display = 'none';
+  }
+
+  if (barEl) {
+    barEl.innerHTML = renderSegmentsHtml(item);
   }
 }
 function init() {
@@ -120,16 +225,93 @@ function setupEventListeners() {
     modalUrl?.classList.remove('open');
   });
 
-  formUrl?.addEventListener('submit', async (e) => {
+  formUrl?.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!inputUrl) return;
     const url = inputUrl.value.trim();
-    const connections = selectSockets ? parseInt(selectSockets.value) || 8 : 8;
     if (!url) return;
-
-    await addDownload(url, connections);
     modalUrl?.classList.remove('open');
     inputUrl.value = '';
+    openConfirmModal(url);
+  });
+
+  // Confirm Modal Handlers
+  document.getElementById('btn-close-confirm-dialog')?.addEventListener('click', () => {
+    document.getElementById('modal-confirm')?.classList.remove('open');
+  });
+  document.getElementById('btn-cancel-confirm')?.addEventListener('click', () => {
+    document.getElementById('modal-confirm')?.classList.remove('open');
+  });
+  document.getElementById('btn-start-confirmed-download')?.addEventListener('click', async () => {
+    document.getElementById('modal-confirm')?.classList.remove('open');
+    const connections = selectSockets ? parseInt(selectSockets.value) || 8 : 8;
+    const newId = await addDownload(pendingDownloadUrl, connections);
+    if (newId) {
+      openDownloadScene(newId);
+    }
+  });
+
+  // Scene Modal Handlers
+  document.getElementById('btn-close-scene')?.addEventListener('click', () => {
+    document.getElementById('modal-scene')?.classList.remove('open');
+    activeSceneDownloadId = null;
+  });
+  document.getElementById('btn-scene-hide')?.addEventListener('click', () => {
+    document.getElementById('modal-scene')?.classList.remove('open');
+    activeSceneDownloadId = null;
+  });
+  document.getElementById('btn-scene-close')?.addEventListener('click', () => {
+    document.getElementById('modal-scene')?.classList.remove('open');
+    activeSceneDownloadId = null;
+  });
+  document.getElementById('btn-scene-pause')?.addEventListener('click', () => {
+    if (activeSceneDownloadId) {
+      const item = downloads.get(activeSceneDownloadId);
+      if (item) {
+        const action = item.status === 'Paused' ? 'resume' : 'pause';
+        triggerAction(activeSceneDownloadId, action);
+      }
+    }
+  });
+  document.getElementById('btn-scene-cancel')?.addEventListener('click', () => {
+    if (activeSceneDownloadId) {
+      const id = activeSceneDownloadId;
+      document.getElementById('modal-scene')?.classList.remove('open');
+      activeSceneDownloadId = null;
+      openDeleteModal(id);
+    }
+  });
+  document.getElementById('btn-scene-open-file')?.addEventListener('click', () => {
+    if (activeSceneDownloadId) {
+      openDownloadFile(activeSceneDownloadId);
+    }
+  });
+  document.getElementById('btn-scene-open-folder')?.addEventListener('click', () => {
+    if (activeSceneDownloadId) {
+      openDownloadFolder(activeSceneDownloadId);
+    }
+  });
+
+  // Save Extension to Downloads Handler
+  document.getElementById('btn-save-ext-downloads')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-save-ext-downloads');
+    if (btn) btn.textContent = 'Menyimpan...';
+    try {
+      const headers: Record<string, string> = {};
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+      const res = await fetch('/api/ext/save-to-downloads', {
+        method: 'POST',
+        headers,
+      });
+      if (res.ok) {
+        if (btn) btn.textContent = '✓ Tersimpan di Downloads!';
+        setTimeout(() => {
+          if (btn) btn.textContent = 'Simpan Ekstensi ke Downloads (swarm-extension.zip)';
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('Failed to save extension to downloads:', err);
+    }
   });
 
   // Action Buttons
@@ -301,7 +483,7 @@ async function fetchInitialData() {
   }
 }
 
-async function addDownload(url: string, connections: number) {
+async function addDownload(url: string, connections: number): Promise<string | null> {
   try {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
@@ -313,13 +495,16 @@ async function addDownload(url: string, connections: number) {
     });
 
     if (res.ok) {
+      const data = await res.json();
       await fetchInitialData();
+      return data.id || null;
     } else {
       alert('Failed: ' + (await res.text()));
     }
   } catch {
     alert('Network error adding download');
   }
+  return null;
 }
 
 async function triggerAction(id: string, action: 'pause' | 'resume' | 'cancel') {
@@ -398,6 +583,9 @@ function connectEventSource() {
         item.segments = data.segments;
         updateRowLive(item);
       }
+      if (activeSceneDownloadId === id) {
+        updateSceneModalLive(item);
+      }
 
       updateGlobalMetrics();
     } catch (err) {
@@ -463,7 +651,11 @@ function renderTable() {
       });
 
       tr.addEventListener('dblclick', () => {
-        openDownloadFolder(item.id);
+        if (item.status === 'Completed') {
+          openDownloadFile(item.id);
+        } else {
+          openDownloadScene(item.id);
+        }
       });
 
       tr.addEventListener('contextmenu', (e) => {

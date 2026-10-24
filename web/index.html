@@ -159,9 +159,10 @@
       </div>
     </footer>
 
-    <!-- Modal: Add URL -->
+    <!-- Modal: Add URL & Confirmation -->
     <div class="modal-backdrop" id="modal-url">
       <div class="modal-box">
+        <div class="modal-titlebar">
           <span>New Download</span>
           <button class="btn-close" id="btn-close-url-dialog">&times;</button>
         </div>
@@ -170,6 +171,37 @@
             <label for="input-url">File Link</label>
             <textarea id="input-url" rows="3" placeholder="Paste link here (https://...)" required></textarea>
           </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="btn-cancel-url">Cancel</button>
+            <button type="submit" class="btn-primary" id="btn-submit-url">Next</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Download Confirmation (File Info Preview) -->
+    <div class="modal-backdrop" id="modal-confirm">
+      <div class="modal-box">
+        <div class="modal-titlebar">
+          <span>Download File Info</span>
+          <button class="btn-close" id="btn-close-confirm-dialog">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="confirm-file-preview">
+            <div class="confirm-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+            <div class="confirm-meta">
+              <span class="confirm-filename" id="confirm-filename">Loading file info...</span>
+              <span class="confirm-filesize" id="confirm-filesize">Checking size...</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>Save To</label>
+            <input type="text" readonly value="Downloads" />
+          </div>
+
           <div class="form-grid">
             <div class="form-row">
               <label for="select-sockets">Speed Profile</label>
@@ -181,11 +213,67 @@
               </select>
             </div>
           </div>
+
           <div class="modal-actions">
-            <button type="button" class="btn-secondary" id="btn-cancel-url">Cancel</button>
-            <button type="submit" class="btn-primary">Start Download</button>
+            <button type="button" class="btn-secondary" id="btn-cancel-confirm">Cancel</button>
+            <button type="button" class="btn-primary" id="btn-start-confirmed-download">Start Download</button>
           </div>
-        </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Active Download Scene (IDM Style Progress Window) -->
+    <div class="modal-backdrop" id="modal-scene">
+      <div class="modal-box scene-dialog">
+        <div class="modal-titlebar">
+          <span id="scene-titlebar">Downloading...</span>
+          <button class="btn-close" id="btn-close-scene">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="scene-header">
+            <span class="scene-filename" id="scene-filename">filename.zip</span>
+            <span class="scene-status-tag" id="scene-status-tag">Downloading</span>
+          </div>
+
+          <div class="scene-metrics-grid">
+            <div class="scene-metric">
+              <span class="scene-label">Downloaded:</span>
+              <span class="scene-val mono" id="scene-size-info">0 B / 0 B</span>
+            </div>
+            <div class="scene-metric">
+              <span class="scene-label">Transfer rate:</span>
+              <span class="scene-val mono" id="scene-speed">0.0 KB/s</span>
+            </div>
+            <div class="scene-metric">
+              <span class="scene-label">Time left:</span>
+              <span class="scene-val mono" id="scene-eta">—</span>
+            </div>
+            <div class="scene-metric">
+              <span class="scene-label">Resume capability:</span>
+              <span class="scene-val mono" id="scene-resume">Yes</span>
+            </div>
+          </div>
+
+          <div class="scene-progress-wrap">
+            <div class="scene-progress-bar" id="scene-progress-bar">
+              <!-- Segmented visual chunks rendered here -->
+            </div>
+          </div>
+
+          <div class="modal-actions space-between" id="scene-actions-active">
+            <button type="button" class="btn-secondary" id="btn-scene-pause">Pause</button>
+            <div>
+              <button type="button" class="btn-secondary" id="btn-scene-hide">Hide</button>
+              <button type="button" class="btn-danger" id="btn-scene-cancel">Cancel</button>
+            </div>
+          </div>
+
+          <div class="modal-actions" id="scene-actions-complete" style="display:none">
+            <button type="button" class="btn-primary" id="btn-scene-open-file">Open File</button>
+            <button type="button" class="btn-secondary" id="btn-scene-open-folder">Open Folder</button>
+            <button type="button" class="btn-secondary" id="btn-scene-close">Close</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -216,37 +304,45 @@
     <div class="modal-backdrop" id="modal-browsers">
       <div class="modal-box browser-dialog">
         <div class="modal-titlebar">
-          <span>Browser Integration Setup</span>
+          <span>Browser Extension Setup</span>
           <button class="btn-close" id="btn-close-browsers-dialog">&times;</button>
         </div>
         <div class="modal-body">
           <p class="modal-desc">
-            Pasang ekstensi Swarm ke Microsoft Edge, Chrome, atau Brave dalam 2 langkah mudah:
+            Simpan paket ekstensi ke folder Downloads kamu dan pasang dengan panduan di bawah ini:
           </p>
+
+          <div class="ext-quick-buttons">
+            <button type="button" class="btn-primary" id="btn-save-ext-downloads">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Simpan Ekstensi ke Downloads (swarm-extension.zip)</span>
+            </button>
+          </div>
 
           <div class="install-steps-card">
             <div class="step-item">
               <span class="step-badge">1</span>
               <div class="step-content">
-                <strong>Buka Halaman Ekstensi & Aktifkan Developer Mode</strong>
-                <p>Ketik <code>edge://extensions</code> di browser, lalu nyalakan toggle <strong>Mode Pengembang</strong> (Developer mode).</p>
+                <strong>Ekstrak File ZIP</strong>
+                <p>Ekstrak <code>swarm-extension.zip</code> yang tersimpan di folder Downloads kamu.</p>
               </div>
             </div>
 
             <div class="step-item">
               <span class="step-badge">2</span>
               <div class="step-content">
-                <strong>Klik Load Unpacked</strong>
-                <p>Klik tombol <strong>Muat yang belum dibongkar</strong> (Load unpacked), lalu pilih folder <code>extension</code> Swarm yang terbuka.</p>
+                <strong>Buka Halaman Ekstensi Browser</strong>
+                <p>Buka <code>edge://extensions</code> di Edge (atau <code>chrome://extensions</code> di Chrome), lalu nyalakan toggle <strong>Mode Pengembang</strong> (Developer mode).</p>
               </div>
             </div>
-          </div>
 
-          <div class="ext-quick-buttons">
-            <button type="button" class="btn-primary" id="btn-open-ext-folder">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <span>Buka Folder Ekstensi</span>
-            </button>
+            <div class="step-item">
+              <span class="step-badge">3</span>
+              <div class="step-content">
+                <strong>Load Unpacked</strong>
+                <p>Klik tombol <strong>Load unpacked</strong> (Muat yang belum dibongkar) lalu pilih folder hasil ekstrak tadi.</p>
+              </div>
+            </div>
           </div>
 
           <div class="modal-actions">

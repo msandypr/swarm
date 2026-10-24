@@ -38,14 +38,16 @@ pub fn create_router(state: AppState) -> Router {
     let api_routes = Router::new()
         .route("/ping", get(handle_ping))
         .route("/ext/handshake", get(handle_ext_handshake))
+        .route("/preflight", post(handle_preflight))
         .route("/downloads", get(handle_list_downloads).post(handle_add_download))
         .route("/ext/add", post(handle_ext_add))
         .route("/ext/open-folder", post(handle_open_extension_folder))
         .route("/ext/open-browser-extensions", post(handle_open_browser_extensions))
-        .route("/ext/launch-browser", post(handle_launch_browser))
         .route("/ext/install", post(handle_one_click_install))
+        .route("/ext/save-to-downloads", post(handle_save_ext_to_downloads))
         .route("/downloads/:id", patch(handle_action).delete(handle_delete))
         .route("/downloads/:id/open-folder", post(handle_open_download_folder))
+        .route("/downloads/:id/open-file", post(handle_open_download_file))
         .route("/events", get(handle_events))
         .layer(middleware::from_fn_with_state(
             state.clone(),
@@ -57,6 +59,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/logo.png", get(handle_logo))
         .route("/icon-128.png", get(handle_icon_128))
         .route("/favicon.png", get(handle_favicon))
+        .route("/swarm-extension.zip", get(handle_download_extension_zip))
         .nest("/api", api_routes)
         .layer(cors)
         .layer(middleware::from_fn(validate_host))
@@ -96,7 +99,7 @@ static INDEX_HTML: &[u8] = include_bytes!("../../../web/dist/index.html");
 static LOGO_PNG: &[u8] = include_bytes!("../../../static/logo.png");
 static ICON_128_PNG: &[u8] = include_bytes!("../../../static/icon-128.png");
 static FAVICON_PNG: &[u8] = include_bytes!("../../../static/icon-32.png");
-
+static EXTENSION_ZIP: &[u8] = include_bytes!("../../../extension/swarm-extension.zip");
 async fn handle_root() -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
@@ -115,6 +118,16 @@ async fn handle_icon_128() -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "image/png")],
         ICON_128_PNG,
+    )
+}
+
+async fn handle_download_extension_zip() -> impl IntoResponse {
+    (
+        [
+            (header::CONTENT_TYPE, "application/zip"),
+            (header::CONTENT_DISPOSITION, "attachment; filename=\"swarm-extension.zip\""),
+        ],
+        EXTENSION_ZIP,
     )
 }
 
@@ -213,6 +226,24 @@ async fn handle_one_click_install(
     }
 }
 
+async fn handle_save_ext_to_downloads() -> impl IntoResponse {
+    let mut dl_dir = std::path::PathBuf::from(r"C:\Downloads");
+    if let Ok(profile) = std::env::var("USERPROFILE") {
+        let p = std::path::PathBuf::from(profile).join("Downloads");
+        if p.exists() {
+            dl_dir = p;
+        }
+    }
+
+    let target_path = dl_dir.join("swarm-extension.zip");
+    if let Err(e) = std::fs::write(&target_path, EXTENSION_ZIP) {
+        return Json(serde_json::json!({ "success": false, "error": e.to_string() }));
+    }
+
+    crate::tray::open_folder_in_explorer(&target_path.to_string_lossy());
+    Json(serde_json::json!({ "success": true, "path": target_path.to_string_lossy() }))
+}
+
 async fn handle_open_download_folder(
     State(state): State<AppState>,
     Path(id): Path<String>,
@@ -228,6 +259,41 @@ async fn handle_open_download_folder(
     }
     crate::tray::open_downloads_folder();
     Json(serde_json::json!({ "success": true }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PreflightRequest {
+    pub url: String,
+}
+
+async fn handle_preflight(
+    Json(payload): Json<PreflightRequest>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let client = reqwest::Client::new();
+    let info = swarm_engine::preflight::check_url(&client, &payload.url, None)
+        .await
+        .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+
+    Ok(Json(serde_json::json!({
+        "filename": info.filename,
+        "total_size": info.total_size,
+        "supports_range": info.supports_range,
+        "mime_type": info.mime_type,
+    })))
+}
+
+async fn handle_open_download_file(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    let list = state.queue.list_downloads().await;
+    if let Some(item) = list.iter().find(|d| d.id == id) {
+        if !item.output_path.is_empty() {
+            crate::tray::open_file_in_shell(&item.output_path);
+            return Json(serde_json::json!({ "success": true }));
+        }
+    }
+    Json(serde_json::json!({ "success": false, "error": "File not found" }))
 }
 
 async fn handle_list_downloads(State(state): State<AppState>) -> impl IntoResponse {
@@ -275,6 +341,8 @@ async fn handle_ext_add(
         .add_download(payload.url, Some(headers), Some(8))
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+    // Focus Swarm UI window when download intercepted from browser
+    crate::tray::open_ui(crate::tray::get_ui_url());
 
     Ok(Json(serde_json::json!({ "id": id, "status": "intercepted" })))
 }
