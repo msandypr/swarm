@@ -1,0 +1,33 @@
+# Design & specs (do not commit)
+download-manager-design.md
+*.design.md
+
+# Rust / Cargo
+/target/
+**/*.rs.bk
+
+# Node / Web UI
+node_modules/
+dist/
+.vite/
+*.log
+
+# Extension artifacts
+extension/dist/
+*.zip
+*.crx
+*.xpi
+
+# Runtime & download artifacts
+runtime.json
+*.part
+*.part.meta
+*.swarm-part
+downloads.jsonl
+downloads.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
