@@ -323,6 +323,8 @@ async fn handle_ext_add(
         payload.referrer,
         payload.cookie,
     );
+    // Bring Swarm to foreground (or launch if closed)
+    crate::tray::focus_or_open_ui();
 
     Json(serde_json::json!({ "status": "intercepted" }))
 }

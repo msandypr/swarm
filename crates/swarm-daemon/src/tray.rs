@@ -13,11 +13,12 @@ use windows_sys::Win32::UI::Shell::{
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     AppendMenuW, CreateIconFromResourceEx, CreatePopupMenu, CreateWindowExW, DefWindowProcW,
-    DestroyMenu, DestroyWindow, DispatchMessageW, GetCursorPos, GetMessageW, LoadIconW,
-    PostMessageW, PostQuitMessage, RegisterClassW, RegisterWindowMessageW, SetForegroundWindow,
-    TrackPopupMenu, TranslateMessage, CS_HREDRAW, CS_VREDRAW, HICON, HMENU, IDI_APPLICATION,
-    MF_SEPARATOR, MF_STRING, MSG, SW_SHOWNORMAL, TPM_BOTTOMALIGN, TPM_RIGHTBUTTON, WM_APP,
-    WM_COMMAND, WM_DESTROY, WM_LBUTTONDBLCLK, WM_LBUTTONUP, WM_NULL, WM_RBUTTONUP, WNDCLASSW,
+    DestroyMenu, DestroyWindow, DispatchMessageW, EnumWindows, GetCursorPos, GetMessageW,
+    GetWindowTextW, LoadIconW, PostMessageW, PostQuitMessage, RegisterClassW,
+    RegisterWindowMessageW, SetForegroundWindow, ShowWindow, TrackPopupMenu, TranslateMessage,
+    CS_HREDRAW, CS_VREDRAW, HICON, HMENU, IDI_APPLICATION, MF_SEPARATOR, MF_STRING, MSG,
+    SW_SHOWNORMAL, TPM_BOTTOMALIGN, TPM_RIGHTBUTTON, WM_APP, WM_COMMAND, WM_DESTROY,
+    WM_LBUTTONDBLCLK, WM_LBUTTONUP, WM_NULL, WM_RBUTTONUP, WNDCLASSW,
 };
 
 use crate::single_instance::{SWARM_WINDOW_CLASS, WM_SWARM_OPEN_UI};
@@ -247,6 +248,37 @@ pub fn open_ui(url: &str) {
             );
         }
     }
+}
+
+unsafe extern "system" fn enum_windows_callback(hwnd: HWND, lparam: LPARAM) -> i32 {
+    let mut title_buf = [0u16; 256];
+    let len = GetWindowTextW(hwnd, title_buf.as_mut_ptr(), 256);
+    if len > 0 {
+        let title = String::from_utf16_lossy(&title_buf[..len as usize]);
+        if title.contains("Swarm Download Manager") {
+            let out_ptr = lparam as *mut HWND;
+            if !out_ptr.is_null() {
+                *out_ptr = hwnd;
+                return 0; // stop enumeration
+            }
+        }
+    }
+    1 // continue
+}
+
+pub fn focus_or_open_ui() {
+    let mut found_hwnd: HWND = null_mut();
+    unsafe {
+        EnumWindows(Some(enum_windows_callback), &mut found_hwnd as *mut HWND as LPARAM);
+        if !found_hwnd.is_null() {
+            ShowWindow(found_hwnd, 9); // SW_RESTORE
+            SetForegroundWindow(found_hwnd);
+            return;
+        }
+    }
+
+    // If window not yet open, launch it
+    open_ui(get_ui_url());
 }
 
 pub fn open_folder_in_explorer(path: &str) {

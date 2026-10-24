@@ -351,6 +351,11 @@ function setupEventListeners() {
     if (selectedId) triggerAction(selectedId, 'pause');
     document.getElementById('context-menu')?.classList.remove('open');
   });
+  document.getElementById('ctx-view-scene')?.addEventListener('click', () => {
+    if (selectedId) openDownloadScene(selectedId);
+    document.getElementById('context-menu')?.classList.remove('open');
+  });
+
 
   document.getElementById('ctx-open-folder')?.addEventListener('click', () => {
     if (selectedId) openDownloadFolder(selectedId);
@@ -385,6 +390,31 @@ function setupEventListeners() {
   document.addEventListener('click', () => {
     document.getElementById('context-menu')?.classList.remove('open');
   });
+
+  // Settings Toggles Handlers
+  const chkMinimize = document.getElementById('setting-minimize-tray') as HTMLInputElement | null;
+  if (chkMinimize) {
+    chkMinimize.checked = localStorage.getItem('swarm_minimize_tray') !== 'false';
+    chkMinimize.addEventListener('change', () => {
+      localStorage.setItem('swarm_minimize_tray', chkMinimize.checked ? 'true' : 'false');
+    });
+  }
+
+  const chkConfirm = document.getElementById('setting-confirm-download') as HTMLInputElement | null;
+  if (chkConfirm) {
+    chkConfirm.checked = localStorage.getItem('swarm_confirm_download') !== 'false';
+    chkConfirm.addEventListener('change', () => {
+      localStorage.setItem('swarm_confirm_download', chkConfirm.checked ? 'true' : 'false');
+    });
+  }
+
+  const chkProgress = document.getElementById('setting-show-progress') as HTMLInputElement | null;
+  if (chkProgress) {
+    chkProgress.checked = localStorage.getItem('swarm_show_progress') !== 'false';
+    chkProgress.addEventListener('change', () => {
+      localStorage.setItem('swarm_show_progress', chkProgress.checked ? 'true' : 'false');
+    });
+  }
 
   // Browsers Dialog
   const modalBrowsers = document.getElementById('modal-browsers');
@@ -597,7 +627,14 @@ function connectEventSource() {
     try {
       const data = JSON.parse(e.data);
       if (data.url) {
-        openConfirmModal(data.url);
+        const confirmPref = localStorage.getItem('swarm_confirm_download') !== 'false';
+        if (confirmPref) {
+          openConfirmModal(data.url);
+        } else {
+          addDownload(data.url, 8).then((newId) => {
+            if (newId) openDownloadScene(newId);
+          });
+        }
       }
     } catch (err) {
       console.error('Incoming download error:', err);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Swarm</title>
+  <title>Swarm Download Manager</title>
   <link rel="icon" type="image/png" href="/icon-128.png" />
   <link rel="stylesheet" href="./src/style.css" />
 </head>
@@ -290,7 +290,25 @@
             <input type="text" readonly value="Downloads" />
           </div>
           <div class="form-row">
-            <label>Startup</label>
+            <label class="checkbox-row">
+              <input type="checkbox" id="setting-minimize-tray" checked />
+              <span>Minimize to system tray on close</span>
+            </label>
+          </div>
+          <div class="form-row">
+            <label class="checkbox-row">
+              <input type="checkbox" id="setting-confirm-download" checked />
+              <span>Show download confirmation dialog</span>
+            </label>
+          </div>
+          <div class="form-row">
+            <label class="checkbox-row">
+              <input type="checkbox" id="setting-show-progress" checked />
+              <span>Show download progress window</span>
+            </label>
+          </div>
+          <div class="form-row">
+            <label>Windows Startup</label>
             <p class="modal-desc">Swarm starts in the system tray when Windows boots. You can toggle this anytime in Windows Task Manager.</p>
           </div>
           <div class="modal-actions">
@@ -403,6 +421,10 @@
       <div class="menu-item" id="ctx-pause">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>
         <span>Pause</span>
+      </div>
+      <div class="menu-item" id="ctx-view-scene">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.48 12H2"/></svg>
+        <span>Progress Window</span>
       </div>
       <div class="menu-separator"></div>
       <div class="menu-item" id="ctx-open-folder">
