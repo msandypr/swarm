@@ -216,48 +216,45 @@
     <div class="modal-backdrop" id="modal-browsers">
       <div class="modal-box browser-dialog">
         <div class="modal-titlebar">
-          <span>Browser Integration</span>
+          <span>Browser Integration Setup</span>
           <button class="btn-close" id="btn-close-browsers-dialog">&times;</button>
         </div>
         <div class="modal-body">
           <p class="modal-desc">
-            Install Swarm extension in your browser to capture downloads automatically:
+            Pasang ekstensi Swarm ke Microsoft Edge, Chrome, atau Brave dalam 2 langkah mudah:
           </p>
 
-          <!-- 1-Click Install Edge -->
-          <div class="browser-card">
-            <div class="browser-info">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-              <div>
-                <span class="browser-name">Microsoft Edge</span>
-                <span class="browser-sub">Default Windows Browser</span>
+          <div class="install-steps-card">
+            <div class="step-item">
+              <span class="step-badge">1</span>
+              <div class="step-content">
+                <strong>Buka Halaman Ekstensi & Aktifkan Developer Mode</strong>
+                <p>Ketik <code>edge://extensions</code> di browser, lalu nyalakan toggle <strong>Mode Pengembang</strong> (Developer mode).</p>
               </div>
             </div>
-            <button type="button" class="btn-primary" id="btn-install-edge">
-              Install to Edge
+
+            <div class="step-item">
+              <span class="step-badge">2</span>
+              <div class="step-content">
+                <strong>Klik Load Unpacked</strong>
+                <p>Klik tombol <strong>Muat yang belum dibongkar</strong> (Load unpacked), lalu pilih folder <code>extension</code> Swarm yang terbuka.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="ext-quick-buttons">
+            <button type="button" class="btn-primary" id="btn-open-ext-folder">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>Buka Folder Ekstensi</span>
             </button>
           </div>
 
-          <!-- 1-Click Install Chrome -->
-          <div class="browser-card">
-            <div class="browser-info">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-              <div>
-                <span class="browser-name">Google Chrome / Brave</span>
-                <span class="browser-sub">Chromium Browser</span>
-              </div>
-            </div>
-            <button type="button" class="btn-secondary" id="btn-install-chrome">
-              Install to Chrome
-            </button>
-          </div>
-
-          <div class="install-status-note" id="ext-install-status">
-            <span>Click install, then click "Add extension" on the browser prompt.</span>
+          <div class="install-status-note">
+            <span>Ekstensi otomatis terhubung ke Swarm tanpa token &middot; Langsung aktif permanen.</span>
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary" id="btn-close-browsers">Close</button>
+            <button type="button" class="btn-secondary" id="btn-close-browsers">Selesai</button>
           </div>
         </div>
       </div>

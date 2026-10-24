@@ -130,56 +130,15 @@ function setupEventListeners() {
   document.getElementById('btn-close-browsers')?.addEventListener('click', () => {
     modalBrowsers?.classList.remove('open');
   });
-  const installStatus = document.getElementById('ext-install-status');
-
-  document.getElementById('btn-install-edge')?.addEventListener('click', async () => {
-    const btn = document.getElementById('btn-install-edge') as HTMLButtonElement | null;
-    if (btn) btn.textContent = 'Installing...';
+  document.getElementById('btn-open-ext-folder')?.addEventListener('click', async () => {
     try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const headers: Record<string, string> = {};
       if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-      const res = await fetch('/api/ext/install', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ browser: 'edge' }),
-      });
-      if (res.ok) {
-        if (btn) btn.textContent = '✓ Installed';
-        if (installStatus) {
-          installStatus.innerHTML = '<span style="color:var(--status-complete)">Edge extension registered! Click "Add extension" on the browser prompt.</span>';
-        }
-      } else {
-        if (btn) btn.textContent = 'Try Again';
-      }
-    } catch {
-      if (btn) btn.textContent = 'Error';
+      await fetch('/api/ext/open-folder', { method: 'POST', headers });
+    } catch (err) {
+      console.error('Failed to open extension folder:', err);
     }
   });
-
-  document.getElementById('btn-install-chrome')?.addEventListener('click', async () => {
-    const btn = document.getElementById('btn-install-chrome') as HTMLButtonElement | null;
-    if (btn) btn.textContent = 'Installing...';
-    try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-      const res = await fetch('/api/ext/install', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ browser: 'chrome' }),
-      });
-      if (res.ok) {
-        if (btn) btn.textContent = '✓ Installed';
-        if (installStatus) {
-          installStatus.innerHTML = '<span style="color:var(--status-complete)">Chrome extension registered! Click "Add extension" on the browser prompt.</span>';
-        }
-      } else {
-        if (btn) btn.textContent = 'Try Again';
-      }
-    } catch {
-      if (btn) btn.textContent = 'Error';
-    }
-  });
-
   // Settings Dialog
   const modalSettings = document.getElementById('modal-settings');
   document.getElementById('btn-settings')?.addEventListener('click', () => {
