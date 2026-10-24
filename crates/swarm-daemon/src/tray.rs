@@ -9,12 +9,12 @@ use windows_sys::Win32::UI::Shell::{
     NIM_ADD, NIM_DELETE, NIM_MODIFY, NOTIFYICONDATAW,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    AppendMenuW, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyMenu, DestroyWindow,
-    DispatchMessageW, GetCursorPos, GetMessageW, LoadIconW, PostMessageW, PostQuitMessage,
-    RegisterClassW, RegisterWindowMessageW, SetForegroundWindow, TrackPopupMenu, TranslateMessage,
-    CS_HREDRAW, CS_VREDRAW, HICON, HMENU, IDI_APPLICATION, MF_SEPARATOR, MF_STRING, MSG,
-    SW_SHOWNORMAL, TPM_BOTTOMALIGN, TPM_RIGHTBUTTON, WM_APP, WM_COMMAND, WM_DESTROY,
-    WM_LBUTTONDBLCLK, WM_LBUTTONUP, WM_NULL, WM_RBUTTONUP, WNDCLASSW,
+    AppendMenuW, CreateIconFromResourceEx, CreatePopupMenu, CreateWindowExW, DefWindowProcW,
+    DestroyMenu, DestroyWindow, DispatchMessageW, GetCursorPos, GetMessageW, LoadIconW,
+    PostMessageW, PostQuitMessage, RegisterClassW, RegisterWindowMessageW, SetForegroundWindow,
+    TrackPopupMenu, TranslateMessage, CS_HREDRAW, CS_VREDRAW, HICON, HMENU, IDI_APPLICATION,
+    MF_SEPARATOR, MF_STRING, MSG, SW_SHOWNORMAL, TPM_BOTTOMALIGN, TPM_RIGHTBUTTON, WM_APP,
+    WM_COMMAND, WM_DESTROY, WM_LBUTTONDBLCLK, WM_LBUTTONUP, WM_NULL, WM_RBUTTONUP, WNDCLASSW,
 };
 
 use crate::single_instance::{SWARM_WINDOW_CLASS, WM_SWARM_OPEN_UI};
@@ -46,6 +46,35 @@ fn to_wide(s: &str) -> Vec<u16> {
     v
 }
 
+pub fn load_embedded_swarm_icon() -> HICON {
+    let ico_bytes: &[u8] = include_bytes!("../../../static/icon.ico");
+    if ico_bytes.len() > 22 {
+        let count = u16::from_le_bytes([ico_bytes[4], ico_bytes[5]]);
+        if count >= 1 {
+            let bytes_in_res = u32::from_le_bytes([ico_bytes[14], ico_bytes[15], ico_bytes[16], ico_bytes[17]]) as usize;
+            let offset = u32::from_le_bytes([ico_bytes[18], ico_bytes[19], ico_bytes[20], ico_bytes[21]]) as usize;
+            if offset + bytes_in_res <= ico_bytes.len() {
+                let res_slice = &ico_bytes[offset..offset + bytes_in_res];
+                unsafe {
+                    let hicon = CreateIconFromResourceEx(
+                        res_slice.as_ptr(),
+                        res_slice.len() as u32,
+                        1,
+                        0x00030000,
+                        32,
+                        32,
+                        0,
+                    );
+                    if !hicon.is_null() {
+                        return hicon;
+                    }
+                }
+            }
+        }
+    }
+    unsafe { LoadIconW(null_mut(), IDI_APPLICATION) }
+}
+
 fn copy_slice_to_wide_buf(dest: &mut [u16], src: &str) {
     let mut i = 0;
     for c in src.encode_utf16() {
@@ -72,8 +101,7 @@ impl TrayManager {
             TASKBAR_CREATED_MSG = RegisterWindowMessageW(taskbar_str.as_ptr());
 
             let hinstance = null_mut();
-            let icon: HICON = LoadIconW(null_mut(), IDI_APPLICATION);
-
+            let icon: HICON = load_embedded_swarm_icon();
             let wc = WNDCLASSW {
                 style: CS_HREDRAW | CS_VREDRAW,
                 lpfnWndProc: Some(tray_window_proc),
@@ -279,7 +307,7 @@ unsafe extern "system" fn tray_window_proc(
         }
         _ if msg == TASKBAR_CREATED_MSG && TASKBAR_CREATED_MSG != 0 => {
             // Taskbar restarted (e.g. explorer.exe restart), re-register icon
-            let icon: HICON = LoadIconW(null_mut(), IDI_APPLICATION);
+            let icon: HICON = load_embedded_swarm_icon();
             let mut nid: NOTIFYICONDATAW = zeroed();
             nid.cbSize = std::mem::size_of::<NOTIFYICONDATAW>() as u32;
             nid.hWnd = hwnd;
