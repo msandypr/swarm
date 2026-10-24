@@ -6,6 +6,7 @@ mod startup;
 mod tray;
 mod store;
 mod runtime;
+mod security;
 
 use single_instance::SingleInstance;
 use tray::{open_ui, TrayManager};
