@@ -46,6 +46,8 @@ pub fn create_router(state: AppState) -> Router {
 
     Router::new()
         .route("/", get(handle_root))
+        .route("/logo.png", get(handle_logo))
+        .route("/favicon.png", get(handle_favicon))
         .nest("/api", api_routes)
         .layer(middleware::from_fn(validate_host))
         .with_state(state)
@@ -71,11 +73,28 @@ async fn auth_token_middleware(
     Err(StatusCode::UNAUTHORIZED)
 }
 
+static INDEX_HTML: &[u8] = include_bytes!("../../../web/dist/index.html");
+static LOGO_PNG: &[u8] = include_bytes!("../../../static/logo.png");
+static FAVICON_PNG: &[u8] = include_bytes!("../../../static/icon-32.png");
+
 async fn handle_root() -> impl IntoResponse {
-    // Placeholder until Web UI SPA assets are embedded
     (
         [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
-        "<!DOCTYPE html><html><head><title>Swarm</title></head><body><h1>Swarm Download Manager</h1><p>Daemon is running.</p></body></html>",
+        INDEX_HTML,
+    )
+}
+
+async fn handle_logo() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "image/png")],
+        LOGO_PNG,
+    )
+}
+
+async fn handle_favicon() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "image/png")],
+        FAVICON_PNG,
     )
 }
 
