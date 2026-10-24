@@ -5,7 +5,19 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use reqwest::header::HeaderMap;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "data")]
+pub enum AppServerEvent {
+    Progress(DownloadProgress),
+    IncomingDownload {
+        url: String,
+        suggested_filename: Option<String>,
+        referrer: Option<String>,
+        cookie: Option<String>,
+    },
+}
 use tokio::sync::{broadcast, Mutex};
 
 use swarm_engine::engine::{DownloadProgress, DownloadStatus, DownloadTask};
@@ -22,7 +34,7 @@ pub struct ActiveDownload {
 #[derive(Clone)]
 pub struct QueueManager {
     inner: Arc<Mutex<QueueInner>>,
-    progress_tx: broadcast::Sender<DownloadProgress>,
+    event_tx: broadcast::Sender<AppServerEvent>,
 }
 
 struct QueueInner {
@@ -49,7 +61,7 @@ pub struct ExtAddDownloadRequest {
 
 impl QueueManager {
     pub fn new(store: StateStore, output_dir: PathBuf) -> Self {
-        let (progress_tx, _) = broadcast::channel(128);
+        let (event_tx, _) = broadcast::channel(128);
         let inner = Arc::new(Mutex::new(QueueInner {
             store,
             output_dir,
@@ -57,11 +69,26 @@ impl QueueManager {
             limiter: SpeedLimiter::new(None),
         }));
 
-        Self { inner, progress_tx }
+        Self { inner, event_tx }
     }
 
-    pub fn subscribe_progress(&self) -> broadcast::Receiver<DownloadProgress> {
-        self.progress_tx.subscribe()
+    pub fn subscribe_events(&self) -> broadcast::Receiver<AppServerEvent> {
+        self.event_tx.subscribe()
+    }
+
+    pub fn broadcast_incoming(
+        &self,
+        url: String,
+        suggested_filename: Option<String>,
+        referrer: Option<String>,
+        cookie: Option<String>,
+    ) {
+        let _ = self.event_tx.send(AppServerEvent::IncomingDownload {
+            url,
+            suggested_filename,
+            referrer,
+            cookie,
+        });
     }
 
     pub async fn list_downloads(&self) -> Vec<DownloadRecord> {
@@ -141,14 +168,13 @@ impl QueueManager {
         tokio::spawn(async move {
             // Monitor progress in parallel
             let progress_id = download_id.clone();
-            let p_tx = manager_clone.progress_tx.clone();
+            let p_tx = manager_clone.event_tx.clone();
             let m_clone_for_rx = manager_clone.clone();
 
             let rx_handle = tokio::spawn(async move {
                 while progress_rx.changed().await.is_ok() {
                     let p = progress_rx.borrow().clone();
-                    let _ = p_tx.send(p.clone());
-
+                    let _ = p_tx.send(AppServerEvent::Progress(p.clone()));
                     // Update store if status changed to completed or failed
                     if p.status == DownloadStatus::Completed || p.status == DownloadStatus::Failed {
                         let status = if p.status == DownloadStatus::Completed {

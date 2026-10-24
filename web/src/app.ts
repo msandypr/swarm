@@ -592,6 +592,17 @@ function connectEventSource() {
       console.error('SSE error:', err);
     }
   });
+
+  es.addEventListener('incoming_download', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.url) {
+        openConfirmModal(data.url);
+      }
+    } catch (err) {
+      console.error('Incoming download error:', err);
+    }
+  });
 }
 
 function renderTable() {

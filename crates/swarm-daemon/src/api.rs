@@ -7,7 +7,6 @@ use axum::middleware::{self, Next};
 use axum::response::sse::{Event, KeepAlive, Sse};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, patch, post};
-use reqwest::header::{HeaderMap, HeaderValue, COOKIE, REFERER, USER_AGENT};
 use axum::{Json, Router};
 use futures_util::stream::{self, Stream};
 use serde::Deserialize;
@@ -317,34 +316,15 @@ async fn handle_add_download(
 async fn handle_ext_add(
     State(state): State<AppState>,
     Json(payload): Json<ExtAddDownloadRequest>,
-) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let mut headers = HeaderMap::new();
+) -> impl IntoResponse {
+    state.queue.broadcast_incoming(
+        payload.url,
+        payload.suggested_filename,
+        payload.referrer,
+        payload.cookie,
+    );
 
-    if let Some(ua) = payload.user_agent {
-        if let Ok(val) = HeaderValue::from_str(&ua) {
-            headers.insert(USER_AGENT, val);
-        }
-    }
-    if let Some(ref_url) = payload.referrer {
-        if let Ok(val) = HeaderValue::from_str(&ref_url) {
-            headers.insert(REFERER, val);
-        }
-    }
-    if let Some(cookie) = payload.cookie {
-        if let Ok(val) = HeaderValue::from_str(&cookie) {
-            headers.insert(COOKIE, val);
-        }
-    }
-
-    let id = state
-        .queue
-        .add_download(payload.url, Some(headers), Some(8))
-        .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
-    // Focus Swarm UI window when download intercepted from browser
-    crate::tray::open_ui(crate::tray::get_ui_url());
-
-    Ok(Json(serde_json::json!({ "id": id, "status": "intercepted" })))
+    Json(serde_json::json!({ "status": "intercepted" }))
 }
 
 async fn handle_action(
@@ -374,18 +354,38 @@ async fn handle_delete(
 async fn handle_events(
     State(state): State<AppState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let rx = state.queue.subscribe_progress();
+    let rx = state.queue.subscribe_events();
 
     let stream = stream::unfold(rx, |mut rx| async move {
         loop {
             match rx.recv().await {
-                Ok(progress) => {
-                    let json = serde_json::to_string(&progress).unwrap_or_default();
-                    let event = Event::default().event("progress").data(json);
+                Ok(app_event) => {
+                    let (event_name, json) = match app_event {
+                        crate::queue::AppServerEvent::Progress(p) => {
+                            ("progress", serde_json::to_string(&p).unwrap_or_default())
+                        }
+                        crate::queue::AppServerEvent::IncomingDownload {
+                            url,
+                            suggested_filename,
+                            referrer,
+                            cookie,
+                        } => {
+                            (
+                                "incoming_download",
+                                serde_json::to_string(&serde_json::json!({
+                                    "url": url,
+                                    "suggested_filename": suggested_filename,
+                                    "referrer": referrer,
+                                    "cookie": cookie,
+                                }))
+                                .unwrap_or_default(),
+                            )
+                        }
+                    };
+                    let event = Event::default().event(event_name).data(json);
                     return Some((Ok(event), rx));
                 }
                 Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
-                    // Consumer lagged, continue to next message
                     continue;
                 }
                 Err(tokio::sync::broadcast::error::RecvError::Closed) => {
