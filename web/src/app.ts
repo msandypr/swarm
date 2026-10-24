@@ -113,10 +113,36 @@ async function openConfirmModal(url: string, suggestedFilename?: string) {
     // continue with defaults
   }
 }
+function renderSegmentsHtml(item: DownloadItem): string {
+  if (item.status === 'Completed') {
+    return `<div class="segment-track" style="flex:1"><div class="segment-solid-fill done" style="width:100%"></div></div>`;
+  }
+
+  if (!item.segments || item.segments.length === 0) {
+    const p = item.total_size ? Math.min(100, Math.round((item.downloaded_bytes / item.total_size) * 100)) : 0;
+    const pausedClass = item.status === 'Paused' ? 'paused' : '';
+    return `<div class="segment-track" style="flex:1"><div class="segment-solid-fill ${pausedClass}" style="width:${p}%"></div></div>`;
+  }
+
+  const pausedClass = item.status === 'Paused' ? 'paused' : '';
+  return item.segments
+    .map((seg) => {
+      const segSize = seg.end - seg.start + 1;
+      const segPercent = segSize > 0 ? Math.min(100, Math.round((seg.downloaded / segSize) * 100)) : 0;
+      return `
+        <div class="segment-track" style="flex:${segSize}">
+          <div class="segment-solid-fill ${pausedClass}" style="width:${segPercent}%"></div>
+        </div>
+      `;
+    })
+    .join('');
+}
 
 function openDownloadScene(id: string, initialFilename?: string) {
   activeSceneDownloadId = id;
   const modalScene = document.getElementById('modal-scene');
+  modalScene?.classList.add('open');
+
   let item = downloads.get(id);
   if (!item) {
     const fallbackName = initialFilename || pendingDownloadUrl.split('/').pop()?.split('?')[0] || 'Downloading file...';
@@ -131,8 +157,11 @@ function openDownloadScene(id: string, initialFilename?: string) {
     };
     downloads.set(id, item);
   }
-  updateSceneModalLive(item);
-  modalScene?.classList.add('open');
+  try {
+    updateSceneModalLive(item);
+  } catch (err) {
+    console.error('Error updating scene modal:', err);
+  }
 }
 
 function updateSceneModalLive(item: DownloadItem) {
