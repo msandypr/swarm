@@ -256,8 +256,8 @@ unsafe extern "system" fn enum_windows_callback(hwnd: HWND, lparam: LPARAM) -> i
     let mut title_buf = [0u16; 256];
     let len = GetWindowTextW(hwnd, title_buf.as_mut_ptr(), 256);
     if len > 0 {
-        let title = String::from_utf16_lossy(&title_buf[..len as usize]);
-        if title.contains("Swarm Download Manager") {
+        let title_lower = String::from_utf16_lossy(&title_buf[..len as usize]).to_lowercase();
+        if title_lower.contains("swarm") {
             let out_ptr = lparam as *mut HWND;
             if !out_ptr.is_null() {
                 *out_ptr = hwnd;
@@ -284,11 +284,13 @@ pub fn focus_or_open_ui_with_url(target_url: &str) {
 
             if fg_thread != current_thread && fg_thread != 0 {
                 AttachThreadInput(current_thread, fg_thread, 1);
+                windows_sys::Win32::UI::Input::KeyboardAndMouse::keybd_event(0, 0, 0, 0);
                 BringWindowToTop(found_hwnd);
                 ShowWindow(found_hwnd, 9); // SW_RESTORE
                 SetForegroundWindow(found_hwnd);
                 AttachThreadInput(current_thread, fg_thread, 0);
             } else {
+                windows_sys::Win32::UI::Input::KeyboardAndMouse::keybd_event(0, 0, 0, 0);
                 BringWindowToTop(found_hwnd);
                 ShowWindow(found_hwnd, 9);
                 SetForegroundWindow(found_hwnd);

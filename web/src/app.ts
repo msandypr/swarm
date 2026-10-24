@@ -84,13 +84,14 @@ async function openDownloadFile(id: string) {
   }
 }
 
-async function openConfirmModal(url: string) {
+async function openConfirmModal(url: string, suggestedFilename?: string) {
   pendingDownloadUrl = url;
   const modalConfirm = document.getElementById('modal-confirm');
   const filenameEl = document.getElementById('confirm-filename');
   const filesizeEl = document.getElementById('confirm-filesize');
 
-  if (filenameEl) filenameEl.textContent = url.split('/').pop()?.split('?')[0] || 'Resolving file name...';
+  const initialName = suggestedFilename || url.split('/').pop()?.split('?')[0] || 'Resolving file name...';
+  if (filenameEl) filenameEl.textContent = initialName;
   if (filesizeEl) filesizeEl.textContent = 'Checking size...';
 
   modalConfirm?.classList.add('open');
@@ -113,13 +114,24 @@ async function openConfirmModal(url: string) {
   }
 }
 
-function openDownloadScene(id: string) {
+function openDownloadScene(id: string, initialFilename?: string) {
   activeSceneDownloadId = id;
   const modalScene = document.getElementById('modal-scene');
-  const item = downloads.get(id);
-  if (item) {
-    updateSceneModalLive(item);
+  let item = downloads.get(id);
+  if (!item) {
+    const fallbackName = initialFilename || pendingDownloadUrl.split('/').pop()?.split('?')[0] || 'Downloading file...';
+    item = {
+      id,
+      url: pendingDownloadUrl,
+      filename: fallbackName,
+      output_path: '',
+      downloaded_bytes: 0,
+      status: 'Downloading',
+      speed_bytes_per_sec: 0,
+    };
+    downloads.set(id, item);
   }
+  updateSceneModalLive(item);
   modalScene?.classList.add('open');
 }
 
@@ -253,10 +265,20 @@ function setupEventListeners() {
   });
   document.getElementById('btn-start-confirmed-download')?.addEventListener('click', async () => {
     document.getElementById('modal-confirm')?.classList.remove('open');
+    const filenameEl = document.getElementById('confirm-filename');
+    const filename = filenameEl ? filenameEl.textContent || undefined : undefined;
+
+    // Show scene progress modal immediately
+    openDownloadScene('pending', filename);
+
     const connections = selectSockets ? parseInt(selectSockets.value) || 8 : 8;
     const newId = await addDownload(pendingDownloadUrl, connections);
     if (newId) {
-      openDownloadScene(newId);
+      activeSceneDownloadId = newId;
+      const item = downloads.get(newId);
+      if (item) {
+        updateSceneModalLive(item);
+      }
     }
   });
 
@@ -636,14 +658,8 @@ function connectEventSource() {
     try {
       const data = JSON.parse(e.data);
       if (data.url) {
-        const confirmPref = localStorage.getItem('swarm_confirm_download') !== 'false';
-        if (confirmPref) {
-          openConfirmModal(data.url);
-        } else {
-          addDownload(data.url, 8).then((newId) => {
-            if (newId) openDownloadScene(newId);
-          });
-        }
+        try { window.focus(); } catch {}
+        openConfirmModal(data.url, data.suggested_filename);
       }
     } catch (err) {
       console.error('Incoming download error:', err);
