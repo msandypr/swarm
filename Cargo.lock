@@ -851,6 +851,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "swarm-engine",
  "tokio",
  "windows-sys 0.59.0",
 ]
