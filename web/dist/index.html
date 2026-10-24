@@ -3,208 +3,219 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Swarm — Download Manager</title>
+  <title>Swarm</title>
   <link rel="icon" type="image/png" href="./favicon.png" />
-  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const o of document.querySelectorAll('link[rel="modulepreload"]'))n(o);new MutationObserver(o=>{for(const s of o)if(s.type==="childList")for(const l of s.addedNodes)l.tagName==="LINK"&&l.rel==="modulepreload"&&n(l)}).observe(document,{childList:!0,subtree:!0});function a(o){const s={};return o.integrity&&(s.integrity=o.integrity),o.referrerPolicy&&(s.referrerPolicy=o.referrerPolicy),o.crossOrigin==="use-credentials"?s.credentials="include":o.crossOrigin==="anonymous"?s.credentials="omit":s.credentials="same-origin",s}function n(o){if(o.ep)return;o.ep=!0;const s=a(o);fetch(o.href,s)}})();let r=new Map,v="all",c="",B=52417;const b=document.getElementById("download-list"),$=document.getElementById("empty-state"),P=document.getElementById("global-speed"),_=document.getElementById("connection-status"),F=document.getElementById("badge-all"),O=document.getElementById("badge-active"),q=document.getElementById("badge-completed"),N=document.getElementById("badge-paused"),I=document.getElementById("modal-add"),H=document.getElementById("form-add-download"),w=document.getElementById("input-url"),j=document.getElementById("select-connections"),C=document.getElementById("drawer-settings"),U=document.getElementById("token-input"),E=document.getElementById("btn-copy-token"),R=document.getElementById("active-port");function G(){J(),K(),z(),V()}function J(){const t=new URLSearchParams(window.location.search).get("t");t?(c=t,localStorage.setItem("swarm_token",t),window.history.replaceState({},document.title,window.location.pathname)):c=localStorage.getItem("swarm_token")||"",U.value=c||"No token active"}function K(){document.getElementById("btn-add-modal")?.addEventListener("click",L),document.getElementById("btn-empty-add")?.addEventListener("click",L),document.getElementById("btn-close-modal")?.addEventListener("click",S),document.getElementById("btn-cancel-modal")?.addEventListener("click",S),H?.addEventListener("submit",async e=>{e.preventDefault();const t=w.value.trim(),a=parseInt(j.value)||8;t&&(await W(t,a),S(),w.value="")}),document.getElementById("btn-settings")?.addEventListener("click",()=>{C.classList.add("open")}),document.getElementById("btn-close-drawer")?.addEventListener("click",()=>{C.classList.remove("open")}),E?.addEventListener("click",()=>{c&&(navigator.clipboard.writeText(c),E.textContent="Copied!",setTimeout(()=>E.textContent="Copy",2e3))}),document.querySelectorAll(".tab-btn").forEach(e=>{e.addEventListener("click",()=>{document.querySelectorAll(".tab-btn").forEach(a=>a.classList.remove("active")),e.classList.add("active");const t=e.getAttribute("data-filter");(t==="all"||t==="downloading"||t==="completed"||t==="paused")&&(v=t),h()})}),document.getElementById("btn-pause-all")?.addEventListener("click",async()=>{for(const[e,t]of r)t.status==="Downloading"&&await k(e.toString(),"pause")}),document.getElementById("btn-clear-completed")?.addEventListener("click",async()=>{for(const[e,t]of r)t.status==="Completed"&&await x(e.toString(),!1)})}function L(){I.classList.add("open"),w.focus(),navigator.clipboard&&navigator.clipboard.readText&&navigator.clipboard.readText().then(e=>{e&&(e.startsWith("http://")||e.startsWith("https://"))&&(w.value=e)}).catch(()=>{})}function S(){I.classList.remove("open")}async function z(){try{const e=await fetch("/api/ping");e.ok&&(B=(await e.json()).port,R.textContent=B.toString());const t={};c&&(t.Authorization=`Bearer ${c}`);const a=await fetch("/api/downloads",{credentials:"include",headers:t});if(a.ok){const n=await a.json();r.clear(),n.forEach(o=>r.set(o.id,o)),h()}}catch(e){console.error("Failed to fetch initial downloads:",e)}}async function W(e,t){try{const a={"Content-Type":"application/json"};c&&(a.Authorization=`Bearer ${c}`);const n=await fetch("/api/downloads",{method:"POST",headers:a,body:JSON.stringify({url:e,connections:t})});n.ok?await z():alert("Failed to start download: "+await n.text())}catch{alert("Network error when adding download")}}async function k(e,t){try{const a={"Content-Type":"application/json"};c&&(a.Authorization=`Bearer ${c}`),await fetch(`/api/downloads/${e}`,{method:"PATCH",headers:a,body:JSON.stringify({action:t})});const n=r.get(e);n&&t==="pause"&&(n.status="Paused",n.speed_bytes_per_sec=0,renderCard(n))}catch(a){console.error("Failed to trigger action:",a)}}async function x(e,t=!1){try{const a={};c&&(a.Authorization=`Bearer ${c}`),await fetch(`/api/downloads/${e}?delete_file=${t}`,{method:"DELETE",headers:a}),r.delete(e),h()}catch(a){console.error("Failed to delete download:",a)}}function V(){const e=c?`/api/events?t=${encodeURIComponent(c)}`:"/api/events",t=new EventSource(e);t.onopen=()=>{_.innerHTML='<span class="status-dot"></span><span class="status-text">Connected</span>',_.style.borderColor="rgba(16, 185, 129, 0.3)"},t.addEventListener("progress",a=>{try{const n=JSON.parse(a.data),o=n.id;let s=r.get(o);s?(s.filename=n.filename||s.filename,s.total_size=n.total_size||s.total_size,s.downloaded_bytes=n.downloaded_bytes,s.status=n.status,s.speed_bytes_per_sec=n.speed_bytes_per_sec,s.eta_seconds=n.eta_seconds,s.segments=n.segments,X(s)):(s={id:n.id,url:"",filename:n.filename,output_path:"",total_size:n.total_size,downloaded_bytes:n.downloaded_bytes,status:n.status,speed_bytes_per_sec:n.speed_bytes_per_sec,eta_seconds:n.eta_seconds,segments:n.segments},r.set(o,s),h()),A()}catch(n){console.error("SSE parse error:",n)}}),t.onerror=()=>{_.innerHTML='<span class="status-dot" style="background:#f59e0b;box-shadow:none"></span><span class="status-text" style="color:#f59e0b">Reconnecting</span>'}}function h(){const e=Array.from(r.values()),t=e.filter(s=>s.status==="Downloading").length,a=e.filter(s=>s.status==="Completed").length,n=e.filter(s=>s.status==="Paused").length;F.textContent=e.length.toString(),O.textContent=t.toString(),q.textContent=a.toString(),N.textContent=n.toString();const o=e.filter(s=>v==="downloading"?s.status==="Downloading":v==="completed"?s.status==="Completed":v==="paused"?s.status==="Paused":!0);if(o.length===0){b.innerHTML="",$.style.display="flex";return}$.style.display="none",b.innerHTML="",o.forEach(s=>{b.appendChild(Q(s))}),A()}function Q(e){const t=document.createElement("div");t.className="download-card",t.id=`card-${e.id}`;const a=Y(e.filename),n=e.total_size?i(e.total_size):"Unknown size",o=i(e.downloaded_bytes),s=e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0,l=e.status==="Downloading"&&e.speed_bytes_per_sec?i(e.speed_bytes_per_sec)+"/s":"--",f=e.status==="Downloading"&&e.eta_seconds!==void 0?T(e.eta_seconds):"--";return t.innerHTML=`
+  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const a of document.querySelectorAll('link[rel="modulepreload"]'))n(a);new MutationObserver(a=>{for(const o of a)if(o.type==="childList")for(const r of o.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&n(r)}).observe(document,{childList:!0,subtree:!0});function s(a){const o={};return a.integrity&&(o.integrity=a.integrity),a.referrerPolicy&&(o.referrerPolicy=a.referrerPolicy),a.crossOrigin==="use-credentials"?o.credentials="include":a.crossOrigin==="anonymous"?o.credentials="omit":o.credentials="same-origin",o}function n(a){if(a.ep)return;a.ep=!0;const o=s(a);fetch(a.href,o)}})();let i=new Map,y="all",l="",E=52417;const w=document.getElementById("download-list"),B=document.getElementById("empty-state"),H=document.getElementById("global-speed"),$=document.getElementById("connection-status"),O=document.getElementById("badge-all"),F=document.getElementById("badge-active"),N=document.getElementById("badge-completed"),q=document.getElementById("badge-paused"),L=document.getElementById("modal-add"),j=document.getElementById("form-add-download"),h=document.getElementById("input-url"),R=document.getElementById("select-connections"),C=document.getElementById("drawer-settings"),U=document.getElementById("token-input"),x=document.getElementById("btn-copy-token"),V=document.getElementById("active-port");function G(){J(),K(),k(),Q()}function J(){const t=new URLSearchParams(window.location.search).get("t");t?(l=t,localStorage.setItem("swarm_token",t),window.history.replaceState({},document.title,window.location.pathname)):l=localStorage.getItem("swarm_token")||"",U.value=l||"No token active"}function K(){document.getElementById("btn-add-modal")?.addEventListener("click",S),document.getElementById("btn-empty-add")?.addEventListener("click",S),document.getElementById("btn-close-modal")?.addEventListener("click",b),document.getElementById("btn-cancel-modal")?.addEventListener("click",b),j?.addEventListener("submit",async e=>{e.preventDefault();const t=h.value.trim(),s=parseInt(R.value)||8;t&&(await W(t,s),b(),h.value="")}),document.getElementById("btn-settings")?.addEventListener("click",()=>{C.classList.add("open")}),document.getElementById("btn-close-drawer")?.addEventListener("click",()=>{C.classList.remove("open")}),x?.addEventListener("click",()=>{l&&(navigator.clipboard.writeText(l),x.textContent="Copied",setTimeout(()=>x.textContent="Copy",2e3))}),document.querySelectorAll(".filter-tab").forEach(e=>{e.addEventListener("click",()=>{document.querySelectorAll(".filter-tab").forEach(s=>s.classList.remove("active")),e.classList.add("active");const t=e.getAttribute("data-filter");(t==="all"||t==="downloading"||t==="completed"||t==="paused")&&(y=t),m()})}),document.getElementById("btn-pause-all")?.addEventListener("click",async()=>{for(const[e,t]of i)t.status==="Downloading"&&await I(e,"pause")}),document.getElementById("btn-clear-completed")?.addEventListener("click",async()=>{for(const[e,t]of i)t.status==="Completed"&&await M(e,!1)})}function S(){L.classList.add("open"),h.focus(),navigator.clipboard&&navigator.clipboard.readText&&navigator.clipboard.readText().then(e=>{e&&(e.startsWith("http://")||e.startsWith("https://"))&&(h.value=e)}).catch(()=>{})}function b(){L.classList.remove("open")}async function k(){try{const e=await fetch("/api/ping");e.ok&&(E=(await e.json()).port,V.textContent=E.toString());const t={};l&&(t.Authorization=`Bearer ${l}`);const s=await fetch("/api/downloads",{credentials:"include",headers:t});if(s.ok){const n=await s.json();i.clear(),n.forEach(a=>i.set(a.id,a)),m()}}catch(e){console.error("Failed to fetch initial downloads:",e)}}async function W(e,t){try{const s={"Content-Type":"application/json"};l&&(s.Authorization=`Bearer ${l}`);const n=await fetch("/api/downloads",{method:"POST",headers:s,body:JSON.stringify({url:e,connections:t})});n.ok?await k():alert("Failed to start download: "+await n.text())}catch{alert("Network error when adding download")}}async function I(e,t){try{const s={"Content-Type":"application/json"};l&&(s.Authorization=`Bearer ${l}`),await fetch(`/api/downloads/${e}`,{method:"PATCH",headers:s,body:JSON.stringify({action:t})});const n=i.get(e);n&&t==="pause"&&(n.status="Paused",n.speed_bytes_per_sec=0,z(n))}catch(s){console.error("Failed to trigger action:",s)}}async function M(e,t=!1){try{const s={};l&&(s.Authorization=`Bearer ${l}`),await fetch(`/api/downloads/${e}?delete_file=${t}`,{method:"DELETE",headers:s}),i.delete(e),m()}catch(s){console.error("Failed to delete download:",s)}}function Q(){const e=l?`/api/events?t=${encodeURIComponent(l)}`:"/api/events",t=new EventSource(e);t.onopen=()=>{$.innerHTML='<span class="status-indicator"></span><span class="status-label">Online</span>'},t.addEventListener("progress",s=>{try{const n=JSON.parse(s.data),a=n.id;let o=i.get(a);o?(o.filename=n.filename||o.filename,o.total_size=n.total_size||o.total_size,o.downloaded_bytes=n.downloaded_bytes,o.status=n.status,o.speed_bytes_per_sec=n.speed_bytes_per_sec,o.eta_seconds=n.eta_seconds,o.segments=n.segments,z(o)):(o={id:n.id,url:"",filename:n.filename,output_path:"",total_size:n.total_size,downloaded_bytes:n.downloaded_bytes,status:n.status,speed_bytes_per_sec:n.speed_bytes_per_sec,eta_seconds:n.eta_seconds,segments:n.segments},i.set(a,o),m()),P()}catch(n){console.error("SSE parse error:",n)}}),t.onerror=()=>{$.innerHTML='<span class="status-indicator" style="background:#fbbf24"></span><span class="status-label" style="color:#fbbf24">Reconnecting</span>'}}function m(){const e=Array.from(i.values()),t=e.filter(o=>o.status==="Downloading").length,s=e.filter(o=>o.status==="Completed").length,n=e.filter(o=>o.status==="Paused").length;O.textContent=e.length.toString(),F.textContent=t.toString(),N.textContent=s.toString(),q.textContent=n.toString();const a=e.filter(o=>y==="downloading"?o.status==="Downloading":y==="completed"?o.status==="Completed":y==="paused"?o.status==="Paused":!0);if(a.length===0){w.innerHTML="",B.style.display="flex";return}B.style.display="none",w.innerHTML="",a.forEach(o=>{w.appendChild(X(o))}),P()}function X(e){const t=document.createElement("div");t.className="download-card",t.id=`card-${e.id}`;const s=Y(e.filename),n=e.total_size?d(e.total_size):"Unknown",a=d(e.downloaded_bytes),o=e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0,r=e.status==="Downloading"&&e.speed_bytes_per_sec?d(e.speed_bytes_per_sec)+"/s":"--",u=e.status==="Downloading"&&e.eta_seconds!==void 0?T(e.eta_seconds):"--";return t.innerHTML=`
     <div class="card-top">
-      <div class="card-file-info">
-        <div class="file-icon">${a}</div>
-        <div class="file-names">
-          <span class="file-name" title="${y(e.filename)}">${y(e.filename||"Initializing download...")}</span>
-          <span class="file-url" title="${y(e.url)}">${y(e.url)}</span>
+      <div class="file-meta-col">
+        <div class="file-type-icon">${s}</div>
+        <div class="file-title-wrap">
+          <span class="file-title" title="${g(e.filename)}">${g(e.filename||"Starting download...")}</span>
+          <span class="file-source" title="${g(e.url)}">${g(e.url)}</span>
         </div>
       </div>
-      <div class="card-actions">
-        ${e.status==="Downloading"?`<button class="btn-icon" data-action="pause" data-id="${e.id}" title="Pause">⏸</button>`:e.status==="Paused"?`<button class="btn-icon" data-action="resume" data-id="${e.id}" title="Resume">▶</button>`:""}
-        <button class="btn-icon danger" data-action="delete" data-id="${e.id}" title="Delete">🗑</button>
+      <div class="card-action-bar">
+        ${e.status==="Downloading"?`<button class="btn-tool" data-action="pause" data-id="${e.id}" title="Pause">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+               </button>`:e.status==="Paused"?`<button class="btn-tool" data-action="resume" data-id="${e.id}" title="Resume">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+               </button>`:""}
+        <button class="btn-tool remove" data-action="delete" data-id="${e.id}" title="Delete">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
       </div>
     </div>
 
-    <div class="card-metrics">
-      <div class="metric-left">
-        <span class="metric-size">${o} of ${n} (${s}%)</span>
-        <span class="metric-status" style="color:${D(e.status)}">${e.status}</span>
+    <div class="metrics-row">
+      <div class="metrics-left">
+        <span>${a} of ${n} (${o}%)</span>
+        <span style="color:${D(e.status)}">${e.status}</span>
       </div>
-      <div class="metric-right">
-        <span class="metric-speed">${l}</span>
-        <span class="metric-eta">ETA: ${f}</span>
+      <div class="metrics-right">
+        <span class="metric-rate">${r}</span>
+        <span>ETA: ${u}</span>
       </div>
     </div>
 
-    <div class="progress-bar-container" id="bar-${e.id}">
-      ${M(e)}
+    <div class="segment-bar" id="bar-${e.id}">
+      ${A(e)}
     </div>
-  `,t.querySelectorAll("[data-action]").forEach(g=>{g.addEventListener("click",m=>{const p=m.currentTarget,d=p.getAttribute("data-action"),u=p.getAttribute("data-id");u&&(d==="delete"?confirm("Delete this download?")&&x(u,!0):(d==="pause"||d==="resume"||d==="cancel")&&k(u,d))})}),t}function X(e){const t=document.getElementById(`card-${e.id}`);if(!t)return;const a=e.total_size?i(e.total_size):"Unknown size",n=i(e.downloaded_bytes),o=e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0,s=e.status==="Downloading"&&e.speed_bytes_per_sec?i(e.speed_bytes_per_sec)+"/s":"--",l=e.status==="Downloading"&&e.eta_seconds!==void 0?T(e.eta_seconds):"--",f=t.querySelector(".file-name");f&&e.filename&&(f.textContent=e.filename);const g=t.querySelector(".metric-size");g&&(g.textContent=`${n} of ${a} (${o}%)`);const m=t.querySelector(".metric-speed");m&&(m.textContent=s);const p=t.querySelector(".metric-eta");p&&(p.textContent=`ETA: ${l}`);const d=t.querySelector(".metric-status");d&&(d.textContent=e.status,d.style.color=D(e.status));const u=document.getElementById(`bar-${e.id}`);u&&(u.innerHTML=M(e))}function M(e){return e.status==="Completed"?'<div class="segment-chunk" style="flex:1"><div class="segment-fill progress-completed" style="width:100%"></div></div>':!e.segments||e.segments.length===0?`<div class="segment-chunk" style="flex:1"><div class="segment-fill" style="width:${e.total_size?Math.min(100,e.downloaded_bytes/e.total_size*100):0}%"></div></div>`:e.segments.map(t=>{const a=t.end-t.start+1,n=a>0?Math.min(100,t.downloaded/a*100):0;return`
-        <div class="segment-chunk" style="flex:${a}">
-          <div class="segment-fill" style="width:${n}%"></div>
+  `,t.querySelectorAll("[data-action]").forEach(p=>{p.addEventListener("click",f=>{const _=f.currentTarget,c=_.getAttribute("data-action"),v=_.getAttribute("data-id");v&&(c==="delete"?confirm("Delete this download record?")&&M(v,!0):(c==="pause"||c==="resume"||c==="cancel")&&I(v,c))})}),t}function z(e){const t=document.getElementById(`card-${e.id}`);if(!t)return;const s=e.total_size?d(e.total_size):"Unknown",n=d(e.downloaded_bytes),a=e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0,o=e.status==="Downloading"&&e.speed_bytes_per_sec?d(e.speed_bytes_per_sec)+"/s":"--";e.status==="Downloading"&&e.eta_seconds!==void 0&&T(e.eta_seconds);const r=t.querySelector(".file-title");r&&e.filename&&(r.textContent=e.filename);const u=t.querySelector(".metrics-left");u&&(u.innerHTML=`
+      <span>${n} of ${s} (${a}%)</span>
+      <span style="color:${D(e.status)}">${e.status}</span>
+    `);const p=t.querySelector(".metric-rate");p&&(p.textContent=o);const f=document.getElementById(`bar-${e.id}`);f&&(f.innerHTML=A(e))}function A(e){if(e.status==="Completed")return'<div class="segment-track" style="flex:1"><div class="segment-solid-fill done" style="width:100%"></div></div>';if(!e.segments||e.segments.length===0){const s=e.total_size?Math.min(100,e.downloaded_bytes/e.total_size*100):0;return`<div class="segment-track" style="flex:1"><div class="segment-solid-fill ${e.status==="Paused"?"paused":""}" style="width:${s}%"></div></div>`}const t=e.status==="Paused"?"paused":"";return e.segments.map(s=>{const n=s.end-s.start+1,a=n>0?Math.min(100,s.downloaded/n*100):0;return`
+        <div class="segment-track" style="flex:${n}">
+          <div class="segment-solid-fill ${t}" style="width:${a}%"></div>
         </div>
-      `}).join("")}function A(){let e=0;for(const t of r.values())t.status==="Downloading"&&t.speed_bytes_per_sec&&(e+=t.speed_bytes_per_sec);P.textContent=e>0?`${i(e)}/s`:"0.0 KB/s"}function i(e){if(e<=0)return"0 B";const t=1024,a=["B","KB","MB","GB","TB"],n=Math.floor(Math.log(e)/Math.log(t));return parseFloat((e/Math.pow(t,n)).toFixed(1))+" "+a[n]}function T(e){if(e<=0)return"0s";if(e<60)return`${e}s`;const t=Math.floor(e/60),a=e%60;return t<60?`${t}m ${a}s`:`${Math.floor(t/60)}h ${t%60}m`}function D(e){switch(e){case"Downloading":return"var(--status-active)";case"Completed":return"var(--status-completed)";case"Paused":return"var(--status-paused)";case"Failed":return"var(--status-failed)";default:return"var(--text-muted)"}}function Y(e){if(!e)return"📄";switch(e.split(".").pop()?.toLowerCase()){case"zip":case"rar":case"7z":case"tar":case"gz":case"iso":return"📦";case"mp4":case"mkv":case"avi":case"mov":case"webm":return"🎬";case"mp3":case"flac":case"wav":case"aac":return"🎵";case"pdf":case"doc":case"docx":case"epub":return"📑";case"exe":case"msi":return"⚙️";case"jpg":case"jpeg":case"png":case"gif":case"webp":case"svg":return"🖼️";default:return"📄"}}function y(e){return e?e.replace(/[&<>"']/g,t=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[t]||t):""}window.addEventListener("DOMContentLoaded",G);</script>
-  <style rel="stylesheet" crossorigin>:root{--bg-primary: #0b0f17;--bg-secondary: #131b2a;--bg-tertiary: #1c273c;--bg-card: #151f32;--bg-card-hover: #19253c;--border-color: #24334d;--border-focus: #00e5ff;--text-main: #f1f5f9;--text-muted: #94a3b8;--text-dim: #64748b;--accent-cyan: #00e5ff;--accent-teal: #00b4d8;--accent-glow: rgba(0, 229, 255, .25);--status-active: #00e5ff;--status-completed: #10b981;--status-paused: #f59e0b;--status-failed: #ef4444;--font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;--font-mono: ui-monospace, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;--radius-sm: 6px;--radius-md: 10px;--radius-lg: 14px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font-family);background-color:var(--bg-primary);color:var(--text-main);height:100vh;overflow:hidden;display:flex;flex-direction:column;user-select:none}#app{display:flex;flex-direction:column;height:100%}.header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background-color:var(--bg-secondary);border-bottom:1px solid var(--border-color);z-index:10}.header-left{display:flex;align-items:center;gap:12px}.brand-logo{width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 10px var(--accent-glow))}.brand-title{font-size:1.15rem;font-weight:800;letter-spacing:1.5px;color:var(--accent-cyan);line-height:1.1}.brand-subtitle{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;font-family:var(--font-mono)}.header-center{display:flex;align-items:center}.speed-meter{display:flex;align-items:center;gap:10px;background-color:var(--bg-tertiary);padding:6px 14px;border-radius:var(--radius-md);border:1px solid var(--border-color)}.speed-icon{font-size:1.1rem;color:var(--accent-cyan)}.speed-content{display:flex;flex-direction:column}.speed-value{font-size:.95rem;font-weight:700;font-family:var(--font-mono);color:var(--text-main);letter-spacing:.5px}.speed-label{font-size:.65rem;color:var(--text-dim);text-transform:uppercase}.header-right{display:flex;align-items:center;gap:12px}.status-indicator{display:flex;align-items:center;gap:6px;padding:5px 10px;background-color:#10b9811a;border:1px solid rgba(16,185,129,.3);border-radius:20px;font-size:.75rem;color:#10b981}.status-dot{width:7px;height:7px;border-radius:50%;background-color:#10b981;box-shadow:0 0 8px #10b981}.toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background-color:var(--bg-primary);border-bottom:1px solid var(--border-color)}.tabs{display:flex;gap:6px}.tab-btn{background:transparent;border:none;color:var(--text-muted);font-size:.82rem;font-weight:600;padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s ease}.tab-btn:hover{color:var(--text-main);background-color:var(--bg-tertiary)}.tab-btn.active{color:var(--accent-cyan);background-color:#00e5ff1a;border:1px solid rgba(0,229,255,.3)}.tab-badge{font-size:.7rem;background-color:var(--bg-tertiary);padding:1px 6px;border-radius:10px;color:var(--text-dim)}.tab-btn.active .tab-badge{background-color:var(--accent-cyan);color:#0b0f17;font-weight:700}.toolbar-actions{display:flex;gap:12px}.btn-text{background:transparent;border:none;color:var(--text-dim);font-size:.8rem;cursor:pointer;transition:color .15s ease}.btn-text:hover{color:var(--text-main)}.main-content{flex:1;overflow-y:auto;padding:18px 24px}.download-list{display:flex;flex-direction:column;gap:12px}.download-card{background-color:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px;display:flex;flex-direction:column;gap:12px;transition:all .2s ease}.download-card:hover{background-color:var(--bg-card-hover);border-color:#00e5ff4d;box-shadow:0 4px 16px #0000004d}.card-top{display:flex;align-items:center;justify-content:space-between}.card-file-info{display:flex;align-items:center;gap:12px;overflow:hidden}.file-icon{font-size:1.4rem;width:40px;height:40px;background-color:var(--bg-tertiary);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;border:1px solid var(--border-color);color:var(--accent-cyan)}.file-names{display:flex;flex-direction:column;overflow:hidden}.file-name{font-size:.95rem;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}.file-url{font-size:.72rem;color:var(--text-dim);font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}.card-actions{display:flex;align-items:center;gap:8px}.card-metrics{display:flex;align-items:center;justify-content:space-between;font-size:.78rem;color:var(--text-muted);font-family:var(--font-mono)}.metric-left,.metric-right{display:flex;gap:14px}.metric-speed{color:var(--accent-cyan);font-weight:600}.progress-bar-container{display:flex;height:8px;background-color:var(--bg-tertiary);border-radius:4px;overflow:hidden;gap:2px;padding:1px}.segment-chunk{height:100%;background-color:#ffffff0d;border-radius:2px;overflow:hidden;position:relative}.segment-fill{height:100%;background:linear-gradient(90deg,#00b4d8,#00e5ff);box-shadow:0 0 6px #00e5ff80;transition:width .2s ease}.progress-completed{background:#10b981!important;box-shadow:0 0 6px #10b98180!important}.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:600;cursor:pointer;border:none;transition:all .15s ease}.btn-primary{background:linear-gradient(135deg,#00b4d8,#00e5ff);color:#0b0f17;box-shadow:0 2px 10px #00e5ff4d}.btn-primary:hover{filter:brightness(1.1);box-shadow:0 4px 14px #00e5ff80}.btn-secondary{background-color:var(--bg-tertiary);color:var(--text-main);border:1px solid var(--border-color)}.btn-secondary:hover{background-color:#24334d;border-color:var(--text-dim)}.btn-sm{padding:5px 10px;font-size:.75rem}.btn-icon{background:transparent;border:1px solid transparent;color:var(--text-muted);width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all .15s ease}.btn-icon:hover{background-color:var(--bg-tertiary);color:var(--text-main);border-color:var(--border-color)}.btn-icon.danger:hover{background-color:#ef444426;color:#ef4444;border-color:#ef44444d}.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}.empty-icon-wrap{width:90px;height:90px;border-radius:50%;background:#00e5ff0d;border:1px solid rgba(0,229,255,.15);display:flex;align-items:center;justify-content:center;margin-bottom:20px}.empty-icon{width:50px;height:50px;opacity:.8;filter:drop-shadow(0 0 12px var(--accent-glow))}.empty-title{font-size:1.15rem;font-weight:700;margin-bottom:8px}.empty-desc{font-size:.85rem;color:var(--text-muted);max-width:380px;margin-bottom:24px;line-height:1.5}.modal-backdrop,.drawer-backdrop{position:fixed;inset:0;background-color:#000000b3;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:100}.modal-backdrop.open,.drawer-backdrop.open{opacity:1;pointer-events:auto}.modal-dialog{background-color:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);width:480px;max-width:90%;padding:24px;box-shadow:0 10px 30px #00000080}.modal-header,.drawer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.modal-title,.drawer-title{font-size:1.1rem;font-weight:700}.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.form-row{display:flex;gap:12px}.form-row .form-group{flex:1}label{font-size:.78rem;font-weight:600;color:var(--text-muted)}input,select,textarea{background-color:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text-main);font-size:.85rem;font-family:inherit;outline:none;transition:border-color .15s ease}input:focus,select:focus,textarea:focus{border-color:var(--accent-cyan);box-shadow:0 0 0 2px var(--accent-glow)}.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.drawer-backdrop{justify-content:flex-end}.drawer-panel{width:420px;height:100%;background-color:var(--bg-secondary);border-left:1px solid var(--border-color);padding:24px;display:flex;flex-direction:column;box-shadow:-8px 0 24px #00000080;transform:translate(100%);transition:transform .25s ease}.drawer-backdrop.open .drawer-panel{transform:translate(0)}.drawer-body{display:flex;flex-direction:column;gap:16px;overflow-y:auto}.settings-card{background-color:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:16px}.settings-card-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}.settings-card-icon{font-size:1.4rem}.settings-card-title{font-size:.95rem;font-weight:600}.settings-card-subtitle{font-size:.75rem;color:var(--text-dim)}.settings-text{font-size:.8rem;color:var(--text-muted);line-height:1.4;margin-bottom:12px}.token-box{display:flex;gap:8px;margin-bottom:8px}.token-box input{flex:1;font-family:var(--font-mono);font-size:.75rem}.pairing-status{font-size:.72rem;color:var(--accent-cyan);font-family:var(--font-mono)}</style>
+      `}).join("")}function P(){let e=0;for(const t of i.values())t.status==="Downloading"&&t.speed_bytes_per_sec&&(e+=t.speed_bytes_per_sec);H.textContent=e>0?`${d(e)}/s`:"0.0 KB/s"}function d(e){if(e<=0)return"0 B";const t=1024,s=["B","KB","MB","GB","TB"],n=Math.floor(Math.log(e)/Math.log(t));return parseFloat((e/Math.pow(t,n)).toFixed(1))+" "+s[n]}function T(e){if(e<=0)return"0s";if(e<60)return`${e}s`;const t=Math.floor(e/60),s=e%60;return t<60?`${t}m ${s}s`:`${Math.floor(t/60)}h ${t%60}m`}function D(e){switch(e){case"Downloading":return"var(--fill-active)";case"Completed":return"var(--fill-completed)";case"Paused":return"var(--fill-paused)";case"Failed":return"var(--fill-failed)";default:return"var(--text-muted)"}}function Y(e){const t=e?.split(".").pop()?.toLowerCase()||"";return["zip","rar","7z","tar","gz","iso"].includes(t)?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>':["mp4","mkv","avi","mov","webm","mp3","wav","flac"].includes(t)?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>':["exe","msi","bin"].includes(t)?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>'}function g(e){return e?e.replace(/[&<>"']/g,t=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[t]||t):""}window.addEventListener("DOMContentLoaded",G);</script>
+  <style rel="stylesheet" crossorigin>:root{--bg-root: #0f1012;--bg-surface: #16171b;--bg-card: #1c1d22;--bg-card-hover: #212329;--bg-element: #262830;--bg-element-active: #2f323c;--border-subtle: #272931;--border-medium: #343742;--border-focus: #5a5f70;--text-main: #f0f1f4;--text-secondary: #9da1ad;--text-muted: #626673;--fill-active: #38bdf8;--fill-completed: #34d399;--fill-paused: #fbbf24;--fill-failed: #f87171;--font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;--font-mono: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;--radius-xs: 4px;--radius-sm: 6px;--radius-md: 8px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font-sans);background-color:var(--bg-root);color:var(--text-main);height:100vh;overflow:hidden;display:flex;flex-direction:column;user-select:none;font-size:13px;line-height:1.4}#app{display:flex;flex-direction:column;height:100%}.header{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background-color:var(--bg-surface);border-bottom:1px solid var(--border-subtle);z-index:10}.header-left{display:flex;align-items:center;gap:10px}.brand-logo{width:26px;height:26px;object-fit:contain}.brand-text{display:flex;align-items:baseline;gap:6px}.brand-title{font-size:.95rem;font-weight:700;letter-spacing:.8px;color:var(--text-main)}.brand-version{font-size:.7rem;color:var(--text-muted);font-family:var(--font-mono)}.header-center{display:flex;align-items:center}.stat-pill{display:flex;align-items:center;gap:8px;background-color:var(--bg-root);padding:4px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-subtle)}.icon-stat{width:14px;height:14px;color:var(--text-secondary)}.stat-meta{display:flex;align-items:baseline;gap:6px}.stat-value{font-size:.85rem;font-weight:600;font-family:var(--font-mono);color:var(--text-main);font-variant-numeric:tabular-nums}.stat-label{font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}.header-right{display:flex;align-items:center;gap:8px}.status-chip{display:flex;align-items:center;gap:6px;padding:4px 9px;background-color:var(--bg-root);border:1px solid var(--border-subtle);border-radius:var(--radius-xs);font-size:.72rem;color:var(--text-secondary)}.status-indicator{width:6px;height:6px;border-radius:50%;background-color:var(--fill-completed)}.toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;background-color:var(--bg-root);border-bottom:1px solid var(--border-subtle)}.filter-group{display:flex;gap:4px}.filter-tab{background:transparent;border:1px solid transparent;color:var(--text-secondary);font-size:.78rem;font-weight:500;padding:5px 10px;border-radius:var(--radius-xs);cursor:pointer;display:flex;align-items:center;gap:6px}.filter-tab:hover{background-color:var(--bg-surface);color:var(--text-main)}.filter-tab.active{background-color:var(--bg-surface);border-color:var(--border-medium);color:var(--text-main)}.filter-tab .count{font-size:.68rem;font-family:var(--font-mono);color:var(--text-muted)}.toolbar-controls{display:flex;gap:8px}.control-btn{background:transparent;border:none;color:var(--text-muted);font-size:.76rem;cursor:pointer;padding:4px 6px;border-radius:var(--radius-xs)}.control-btn:hover{color:var(--text-main);background-color:var(--bg-surface)}.content-view{flex:1;overflow-y:auto;padding:14px 18px}.item-list{display:flex;flex-direction:column;gap:8px}.download-card{background-color:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:12px 14px;display:flex;flex-direction:column;gap:10px}.download-card:hover{background-color:var(--bg-card-hover);border-color:var(--border-medium)}.card-top{display:flex;align-items:center;justify-content:space-between}.file-meta-col{display:flex;align-items:center;gap:10px;overflow:hidden}.file-type-icon{width:28px;height:28px;background-color:var(--bg-element);border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0}.file-title-wrap{display:flex;flex-direction:column;overflow:hidden}.file-title{font-size:.88rem;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:480px}.file-source{font-size:.72rem;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:480px}.card-action-bar{display:flex;align-items:center;gap:4px}.metrics-row{display:flex;align-items:center;justify-content:space-between;font-size:.75rem;color:var(--text-secondary);font-family:var(--font-mono);font-variant-numeric:tabular-nums}.metrics-left,.metrics-right{display:flex;gap:12px}.metric-rate{color:var(--fill-active);font-weight:600}.segment-bar{display:flex;height:6px;background-color:var(--bg-root);border-radius:3px;overflow:hidden;gap:1px;border:1px solid var(--border-subtle)}.segment-track{height:100%;background-color:#202228;position:relative;overflow:hidden}.segment-solid-fill{height:100%;background-color:var(--fill-active)}.segment-solid-fill.done{background-color:var(--fill-completed)}.segment-solid-fill.paused{background-color:var(--fill-paused)}.btn{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:var(--radius-xs);font-size:.78rem;font-weight:500;cursor:pointer;border:1px solid transparent}.btn-icon{width:14px;height:14px}.btn-default{background-color:var(--bg-element);color:var(--text-main);border-color:var(--border-subtle)}.btn-default:hover{background-color:var(--bg-element-active);border-color:var(--border-medium)}.btn-action{background-color:#f0f1f4;color:#0f1012;font-weight:600}.btn-action:hover{background-color:#fff}.btn-compact{padding:4px 8px;font-size:.72rem}.btn-tool{background:transparent;border:1px solid transparent;color:var(--text-muted);width:26px;height:26px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;cursor:pointer}.btn-tool:hover{background-color:var(--bg-element);color:var(--text-main);border-color:var(--border-subtle)}.btn-tool.remove:hover{background-color:#f8717126;color:var(--fill-failed);border-color:#f871714d}.empty-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center}.empty-icon-box{width:52px;height:52px;border-radius:var(--radius-sm);background-color:var(--bg-surface);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--text-muted);margin-bottom:14px}.empty-headline{font-size:.95rem;font-weight:600;margin-bottom:4px}.empty-caption{font-size:.78rem;color:var(--text-muted);max-width:320px;margin-bottom:18px;line-height:1.4}.overlay{position:fixed;inset:0;background-color:#000000a6;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:100}.overlay.open{opacity:1;pointer-events:auto}.dialog{background-color:var(--bg-surface);border:1px solid var(--border-medium);border-radius:var(--radius-md);width:440px;max-width:90%;padding:18px}.dialog-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.dialog-title{font-size:.95rem;font-weight:600}.icon-close{background:transparent;border:none;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center}.icon-close:hover{color:var(--text-main)}.input-block{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}.input-grid{display:flex;gap:10px}.input-grid .input-block{flex:1}label{font-size:.75rem;font-weight:500;color:var(--text-secondary)}input,select,textarea{background-color:var(--bg-root);border:1px solid var(--border-subtle);border-radius:var(--radius-xs);padding:7px 10px;color:var(--text-main);font-size:.8rem;font-family:inherit;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--border-focus)}.dialog-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.overlay:has(.drawer){justify-content:flex-end}.drawer{width:360px;height:100%;background-color:var(--bg-surface);border-left:1px solid var(--border-subtle);padding:18px;display:flex;flex-direction:column}.drawer-content{display:flex;flex-direction:column;gap:14px;overflow-y:auto}.config-panel{background-color:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:12px}.panel-heading{font-size:.82rem;font-weight:600;margin-bottom:4px}.panel-desc{font-size:.75rem;color:var(--text-muted);line-height:1.4;margin-bottom:8px}.copy-field{display:flex;gap:6px;margin-bottom:6px}.copy-field input{flex:1;font-family:var(--font-mono);font-size:.72rem}.panel-footnote{font-size:.7rem;color:var(--text-muted)}.panel-footnote code{font-family:var(--font-mono);color:var(--text-secondary)}</style>
 </head>
-<body class="theme-dark">
+<body>
   <div id="app">
     <!-- Header -->
     <header class="header">
       <div class="header-left">
         <img src="./logo.png" alt="Swarm Logo" class="brand-logo" />
         <div class="brand-text">
-          <h1 class="brand-title">SWARM</h1>
-          <span class="brand-subtitle">Download Engine</span>
+          <span class="brand-title">SWARM</span>
+          <span class="brand-version">v0.1.0</span>
         </div>
       </div>
 
       <div class="header-center">
-        <div class="speed-meter">
-          <span class="speed-icon">⚡</span>
-          <div class="speed-content">
-            <span class="speed-value" id="global-speed">0.0 KB/s</span>
-            <span class="speed-label">Global Throughput</span>
+        <div class="stat-pill">
+          <svg class="icon-stat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <div class="stat-meta">
+            <span class="stat-value" id="global-speed">0.0 KB/s</span>
+            <span class="stat-label">Total Speed</span>
           </div>
         </div>
       </div>
 
       <div class="header-right">
-        <div class="status-indicator" id="connection-status" title="Connected to Swarm Daemon">
-          <span class="status-dot"></span>
-          <span class="status-text">Connected</span>
+        <div class="status-chip" id="connection-status" title="Connection state to local daemon">
+          <span class="status-indicator"></span>
+          <span class="status-label">Online</span>
         </div>
-        <button class="btn btn-secondary" id="btn-settings" title="Settings & Extension Pairing">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button class="btn btn-default" id="btn-settings" title="Settings & Pairing">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"></circle>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
           <span>Settings</span>
         </button>
-        <button class="btn btn-primary" id="btn-add-modal">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <button class="btn btn-action" id="btn-add-modal">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          <span>New Download</span>
+          <span>Add URL</span>
         </button>
       </div>
     </header>
 
-    <!-- Toolbar & Filters -->
-    <section class="toolbar">
-      <div class="tabs" id="filter-tabs">
-        <button class="tab-btn active" data-filter="all">All <span class="tab-badge" id="badge-all">0</span></button>
-        <button class="tab-btn" data-filter="downloading">Active <span class="tab-badge" id="badge-active">0</span></button>
-        <button class="tab-btn" data-filter="completed">Completed <span class="tab-badge" id="badge-completed">0</span></button>
-        <button class="tab-btn" data-filter="paused">Paused <span class="tab-badge" id="badge-paused">0</span></button>
+    <!-- Subheader Toolbar -->
+    <nav class="toolbar">
+      <div class="filter-group" id="filter-tabs">
+        <button class="filter-tab active" data-filter="all">
+          <span>All</span>
+          <span class="count" id="badge-all">0</span>
+        </button>
+        <button class="filter-tab" data-filter="downloading">
+          <span>Active</span>
+          <span class="count" id="badge-active">0</span>
+        </button>
+        <button class="filter-tab" data-filter="completed">
+          <span>Completed</span>
+          <span class="count" id="badge-completed">0</span>
+        </button>
+        <button class="filter-tab" data-filter="paused">
+          <span>Paused</span>
+          <span class="count" id="badge-paused">0</span>
+        </button>
       </div>
 
-      <div class="toolbar-actions">
-        <button class="btn-text" id="btn-pause-all" title="Pause all active downloads">Pause All</button>
-        <button class="btn-text" id="btn-clear-completed" title="Clear completed downloads from list">Clear Completed</button>
+      <div class="toolbar-controls">
+        <button class="control-btn" id="btn-pause-all">Pause All</button>
+        <button class="control-btn" id="btn-clear-completed">Clear Finished</button>
       </div>
-    </section>
+    </nav>
 
-    <!-- Main Content: Download Cards -->
-    <main class="main-content">
-      <div class="download-list" id="download-list">
-        <!-- Download cards rendered here -->
+    <!-- Main List Container -->
+    <main class="content-view">
+      <div class="item-list" id="download-list">
+        <!-- Rendered items -->
       </div>
 
       <!-- Empty State -->
-      <div class="empty-state" id="empty-state">
-        <div class="empty-icon-wrap">
-          <img src="./logo.png" alt="Empty" class="empty-icon" />
+      <div class="empty-placeholder" id="empty-state">
+        <div class="empty-icon-box">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
         </div>
-        <h3 class="empty-title">No Downloads Found</h3>
-        <p class="empty-desc">Add a URL manually or capture downloads seamlessly with the Swarm browser extension.</p>
-        <button class="btn btn-primary" id="btn-empty-add">+ Add Download</button>
+        <p class="empty-headline">Queue is empty</p>
+        <p class="empty-caption">Paste a download URL or trigger downloads from your browser extension.</p>
+        <button class="btn btn-default" id="btn-empty-add">+ Add URL</button>
       </div>
     </main>
 
-    <!-- Modal: Add Download -->
-    <div class="modal-backdrop" id="modal-add">
-      <div class="modal-dialog">
-        <div class="modal-header">
-          <h2 class="modal-title">Add New Download</h2>
-          <button class="btn-icon" id="btn-close-modal">&times;</button>
+    <!-- Add Download Modal -->
+    <div class="overlay" id="modal-add">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h2 class="dialog-title">New Download</h2>
+          <button class="icon-close" id="btn-close-modal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <form id="form-add-download">
-          <div class="form-group">
-            <label for="input-url">Download URL</label>
-            <textarea id="input-url" rows="3" placeholder="https://example.com/file.zip" required></textarea>
+          <div class="input-block">
+            <label for="input-url">Target URL</label>
+            <textarea id="input-url" rows="3" placeholder="https://..." required></textarea>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="select-connections">Parallel Segments</label>
+          <div class="input-grid">
+            <div class="input-block">
+              <label for="select-connections">Parallel Sockets</label>
               <select id="select-connections">
-                <option value="4">4 Segments</option>
-                <option value="8" selected>8 Segments (Recommended)</option>
-                <option value="12">12 Segments</option>
-                <option value="16">16 Segments (Fastest)</option>
+                <option value="4">4 Connections</option>
+                <option value="8" selected>8 Connections (Standard)</option>
+                <option value="12">12 Connections</option>
+                <option value="16">16 Connections</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="input-limit">Speed Limit (KB/s)</label>
-              <input type="number" id="input-limit" placeholder="Unlimited" min="0" />
+            <div class="input-block">
+              <label for="input-limit">Rate Limit (KB/s)</label>
+              <input type="number" id="input-limit" placeholder="No limit" min="0" />
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Start Download</button>
+          <div class="dialog-footer">
+            <button type="button" class="btn btn-default" id="btn-cancel-modal">Cancel</button>
+            <button type="submit" class="btn btn-action">Start Download</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Drawer: Settings & Extension Pairing -->
-    <div class="drawer-backdrop" id="drawer-settings">
-      <div class="drawer-panel">
-        <div class="drawer-header">
-          <h2 class="drawer-title">Swarm Settings</h2>
-          <button class="btn-icon" id="btn-close-drawer">&times;</button>
+    <!-- Settings Drawer -->
+    <div class="overlay" id="drawer-settings">
+      <div class="drawer">
+        <div class="dialog-header">
+          <h2 class="dialog-title">Settings & Extension</h2>
+          <button class="icon-close" id="btn-close-drawer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
-        <div class="drawer-body">
-          <!-- Extension Pairing Card -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <div class="settings-card-icon">🔌</div>
-              <div>
-                <h4 class="settings-card-title">Browser Extension Pairing</h4>
-                <p class="settings-card-subtitle">Connect Chromium (Edge/Chrome/Brave) or Firefox</p>
-              </div>
+        <div class="drawer-content">
+          <section class="config-panel">
+            <h3 class="panel-heading">Browser Extension Pairing</h3>
+            <p class="panel-desc">Paste this authentication token into the extension popup:</p>
+            <div class="copy-field">
+              <input type="text" id="token-input" readonly value="" />
+              <button class="btn btn-default btn-compact" id="btn-copy-token">Copy</button>
             </div>
-            <p class="settings-text">
-              Copy this authentication token and paste it into the Swarm Browser Extension popup:
-            </p>
-            <div class="token-box">
-              <input type="text" id="token-input" readonly value="Loading token..." />
-              <button class="btn btn-secondary btn-sm" id="btn-copy-token">Copy</button>
-            </div>
-            <div class="pairing-status" id="pairing-status">
-              Token is valid and active on port <strong id="active-port">52417</strong>.
-            </div>
-          </div>
+            <p class="panel-footnote">Daemon active on <code>127.0.0.1:<span id="active-port">52417</span></code></p>
+          </section>
 
-          <!-- Windows Startup -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <div class="settings-card-icon">🚀</div>
-              <div>
-                <h4 class="settings-card-title">Windows Startup</h4>
-                <p class="settings-card-subtitle">Managed via Task Manager → Startup apps</p>
-              </div>
-            </div>
-            <p class="settings-text">
-              Swarm runs in the system tray when Windows boots. To enable or disable, toggle it in Windows Task Manager.
-            </p>
-          </div>
+          <section class="config-panel">
+            <h3 class="panel-heading">Windows Startup</h3>
+            <p class="panel-desc">Auto-start daemon in system tray. Managed via Windows Task Manager &rarr; Startup apps.</p>
+          </section>
 
-          <!-- About Swarm -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <div class="settings-card-icon">🐝</div>
-              <div>
-                <h4 class="settings-card-title">Swarm Engine v0.1.0</h4>
-                <p class="settings-card-subtitle">Rust segmented download manager &middot; RAM &lt; 5MB</p>
-              </div>
-            </div>
-          </div>
+          <section class="config-panel">
+            <h3 class="panel-heading">Architecture</h3>
+            <p class="panel-desc">Rust core daemon &middot; Win32 tray &middot; NTFS Sparse file preallocation &middot; Memory budget &lt; 5MB.</p>
+          </section>
         </div>
       </div>
     </div>
