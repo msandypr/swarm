@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu4eqp9XqzLyWOzsTg0yAw0je+KM55foahGKLIsRXUAEWxvrWxGqEDVf4zXqdZYyfTIc+N37ceAPpndwgax3AmtELO+DOXlULACZDUzWZ7/n9fkfBcGYbmCupkSGMzy97S7ZwQl7ywvGuLCDaM8vqOdylQyFP3rS51ur+9OuvsOJHkXq0wTJiGbNmtLEFaqrxl+EQVL3CwtKEtwbAJDsGXT5wh7FOaT8Hngf4/eDKlDbQjr5gxjCh7agB8WEjGLF/8bhjRNINIldmtAGfGD+ogMFP+rJnNFWlr/xLxM1w8TL3mOXQzqU4h9mjEkinoiDWA/yj9ZQbkiQtygbfBEKsLQIDAQAB",
   "name": "Swarm Download Manager",
   "version": "0.1.0",
   "description": "Fast download interceptor and companion for Swarm",

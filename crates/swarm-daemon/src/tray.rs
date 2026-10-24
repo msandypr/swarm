@@ -3,7 +3,10 @@ use std::mem::zeroed;
 use std::ptr::{null, null_mut};
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use windows_sys::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, WPARAM};
+use windows_sys::Win32::Foundation::{ERROR_SUCCESS, HWND, LPARAM, LRESULT, POINT, WPARAM};
+use windows_sys::Win32::System::Registry::{
+    RegCloseKey, RegCreateKeyExW, RegSetValueExW, HKEY, HKEY_CURRENT_USER, KEY_WRITE, REG_SZ,
+};
 use windows_sys::Win32::UI::Shell::{
     ShellExecuteW, Shell_NotifyIconW, NIF_ICON, NIF_INFO, NIF_MESSAGE, NIF_TIP, NIIF_INFO,
     NIM_ADD, NIM_DELETE, NIM_MODIFY, NOTIFYICONDATAW,
@@ -289,6 +292,97 @@ pub fn open_browser_extensions_page(browser: &str) -> bool {
     }
 
     false
+}
+
+const EXTENSION_ID: &str = "madckighhpinkfekohbingecbjignpib";
+
+pub fn install_extension_to_browser(browser: &str) -> Result<String, String> {
+    let mut crx_path = std::path::PathBuf::from("extension.crx");
+    if !crx_path.exists() {
+        if let Ok(exe_path) = std::env::current_exe() {
+            if let Some(parent) = exe_path.parent() {
+                let candidate = parent.join("extension.crx");
+                if candidate.exists() {
+                    crx_path = candidate;
+                }
+            }
+        }
+    }
+
+    let abs_crx = crx_path
+        .canonicalize()
+        .map(|p| {
+            let s = p.to_string_lossy().to_string();
+            s.strip_prefix(r"\\?\").unwrap_or(&s).to_string()
+        })
+        .map_err(|e| format!("CRX file not found: {}", e))?;
+
+    let reg_paths = [
+        format!(r"Software\Microsoft\Edge\Extensions\{}", EXTENSION_ID),
+        format!(r"Software\Google\Chrome\Extensions\{}", EXTENSION_ID),
+    ];
+
+    for reg_path in &reg_paths {
+        let reg_wide = to_wide(reg_path);
+        unsafe {
+            let mut hkey: HKEY = null_mut();
+            if RegCreateKeyExW(
+                HKEY_CURRENT_USER,
+                reg_wide.as_ptr(),
+                0,
+                null_mut(),
+                0,
+                KEY_WRITE,
+                null_mut(),
+                &mut hkey,
+                null_mut(),
+            ) == ERROR_SUCCESS {
+                let path_name = to_wide("path");
+                let crx_wide = to_wide(&abs_crx);
+                RegSetValueExW(
+                    hkey,
+                    path_name.as_ptr(),
+                    0,
+                    REG_SZ,
+                    crx_wide.as_ptr() as *const u8,
+                    (crx_wide.len() * 2) as u32,
+                );
+
+                let ver_name = to_wide("version");
+                let ver_wide = to_wide("0.1.0");
+                RegSetValueExW(
+                    hkey,
+                    ver_name.as_ptr(),
+                    0,
+                    REG_SZ,
+                    ver_wide.as_ptr() as *const u8,
+                    (ver_wide.len() * 2) as u32,
+                );
+
+                RegCloseKey(hkey);
+            }
+        }
+    }
+
+    let exe_candidates = match browser {
+        "chrome" => vec![
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        ],
+        _ => vec![
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        ],
+    };
+
+    for exe in exe_candidates {
+        if std::path::Path::new(exe).exists() {
+            let _ = std::process::Command::new(exe).arg(&abs_crx).spawn();
+            return Ok("Extension registered and browser prompted".to_string());
+        }
+    }
+
+    Ok("Extension registered in Windows Registry".to_string())
 }
 
 pub fn launch_browser_with_extension(browser: &str) -> bool {

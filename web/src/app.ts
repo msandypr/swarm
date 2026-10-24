@@ -130,62 +130,53 @@ function setupEventListeners() {
   document.getElementById('btn-close-browsers')?.addEventListener('click', () => {
     modalBrowsers?.classList.remove('open');
   });
-  document.getElementById('btn-launch-edge')?.addEventListener('click', async () => {
+  const installStatus = document.getElementById('ext-install-status');
+
+  document.getElementById('btn-install-edge')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-install-edge') as HTMLButtonElement | null;
+    if (btn) btn.textContent = 'Installing...';
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-      // Open Edge extensions page directly via OS
-      await fetch('/api/ext/open-browser-extensions', {
+      const res = await fetch('/api/ext/install', {
         method: 'POST',
         headers,
         body: JSON.stringify({ browser: 'edge' }),
       });
-      // Also open extension folder beside it
-      await fetch('/api/ext/open-folder', { method: 'POST', headers });
-      modalBrowsers?.classList.remove('open');
-    } catch (err) {
-      console.error('Launch Edge error:', err);
+      if (res.ok) {
+        if (btn) btn.textContent = '✓ Installed';
+        if (installStatus) {
+          installStatus.innerHTML = '<span style="color:var(--status-complete)">Edge extension registered! Click "Add extension" on the browser prompt.</span>';
+        }
+      } else {
+        if (btn) btn.textContent = 'Try Again';
+      }
+    } catch {
+      if (btn) btn.textContent = 'Error';
     }
   });
 
-  document.getElementById('btn-launch-chrome')?.addEventListener('click', async () => {
+  document.getElementById('btn-install-chrome')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-install-chrome') as HTMLButtonElement | null;
+    if (btn) btn.textContent = 'Installing...';
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-      // Open Chrome extensions page directly via OS
-      await fetch('/api/ext/open-browser-extensions', {
+      const res = await fetch('/api/ext/install', {
         method: 'POST',
         headers,
         body: JSON.stringify({ browser: 'chrome' }),
       });
-      // Also open extension folder beside it
-      await fetch('/api/ext/open-folder', { method: 'POST', headers });
-      modalBrowsers?.classList.remove('open');
-    } catch (err) {
-      console.error('Launch Chrome error:', err);
-    }
-  });
-  document.getElementById('btn-open-ext-folder')?.addEventListener('click', async () => {
-    try {
-      const headers: Record<string, string> = {};
-      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-      await fetch('/api/ext/open-folder', { method: 'POST', headers });
-    } catch (err) {
-      console.error('Failed to open extension folder:', err);
-    }
-  });
-
-  document.getElementById('btn-open-browser-page')?.addEventListener('click', async () => {
-    try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-      await fetch('/api/ext/open-browser-extensions', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ browser: 'edge' }),
-      });
-    } catch (err) {
-      console.error('Failed to open browser page:', err);
+      if (res.ok) {
+        if (btn) btn.textContent = '✓ Installed';
+        if (installStatus) {
+          installStatus.innerHTML = '<span style="color:var(--status-complete)">Chrome extension registered! Click "Add extension" on the browser prompt.</span>';
+        }
+      } else {
+        if (btn) btn.textContent = 'Try Again';
+      }
+    } catch {
+      if (btn) btn.textContent = 'Error';
     }
   });
 

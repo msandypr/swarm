@@ -216,63 +216,44 @@
     <div class="modal-backdrop" id="modal-browsers">
       <div class="modal-box browser-dialog">
         <div class="modal-titlebar">
-          <span>Browser Extension</span>
+          <span>Browser Integration</span>
           <button class="btn-close" id="btn-close-browsers-dialog">&times;</button>
         </div>
         <div class="modal-body">
           <p class="modal-desc">
-            Swarm captures downloads automatically. Choose your browser to connect:
+            Install Swarm extension in your browser to capture downloads automatically:
           </p>
 
-          <!-- 1-Click Launch Edge Card -->
+          <!-- 1-Click Install Edge -->
           <div class="browser-card">
             <div class="browser-info">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
               <div>
                 <span class="browser-name">Microsoft Edge</span>
                 <span class="browser-sub">Default Windows Browser</span>
               </div>
             </div>
-            <button type="button" class="btn-primary" id="btn-launch-edge">
-              1-Click Launch
+            <button type="button" class="btn-primary" id="btn-install-edge">
+              Install to Edge
             </button>
           </div>
 
-          <!-- 1-Click Launch Chrome Card -->
+          <!-- 1-Click Install Chrome -->
           <div class="browser-card">
             <div class="browser-info">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
               <div>
                 <span class="browser-name">Google Chrome / Brave</span>
                 <span class="browser-sub">Chromium Browser</span>
               </div>
             </div>
-            <button type="button" class="btn-secondary" id="btn-launch-chrome">
-              1-Click Launch
+            <button type="button" class="btn-secondary" id="btn-install-chrome">
+              Install to Chrome
             </button>
           </div>
 
-          <!-- Manual 2-Step Option -->
-          <div class="manual-install-box">
-            <span class="manual-title">Or install manually in 2 steps:</span>
-            <div class="step-list">
-              <div class="step-row">
-                <span class="step-num">1</span>
-                <span>Turn on <em>Developer mode</em> in your browser extensions page.</span>
-              </div>
-              <div class="step-row">
-                <span class="step-num">2</span>
-                <span>Click <em>Load unpacked</em> and choose the opened Swarm folder.</span>
-              </div>
-            </div>
-            <div class="manual-buttons">
-              <button type="button" class="btn-secondary btn-sm" id="btn-open-ext-folder">
-                Open Extension Folder
-              </button>
-              <button type="button" class="btn-secondary btn-sm" id="btn-open-browser-page">
-                Open Extensions Page
-              </button>
-            </div>
+          <div class="install-status-note" id="ext-install-status">
+            <span>Click install, then click "Add extension" on the browser prompt.</span>
           </div>
 
           <div class="modal-actions">

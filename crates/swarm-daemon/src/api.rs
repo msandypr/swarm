@@ -43,6 +43,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/ext/open-folder", post(handle_open_extension_folder))
         .route("/ext/open-browser-extensions", post(handle_open_browser_extensions))
         .route("/ext/launch-browser", post(handle_launch_browser))
+        .route("/ext/install", post(handle_one_click_install))
         .route("/downloads/:id", patch(handle_action).delete(handle_delete))
         .route("/events", get(handle_events))
         .layer(middleware::from_fn_with_state(
@@ -188,6 +189,21 @@ async fn handle_open_browser_extensions(
     let browser = payload.browser.unwrap_or_else(|| "edge".to_string());
     let ok = crate::tray::open_browser_extensions_page(&browser);
     Json(serde_json::json!({ "success": ok }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OneClickInstallRequest {
+    pub browser: Option<String>,
+}
+
+async fn handle_one_click_install(
+    Json(payload): Json<OneClickInstallRequest>,
+) -> impl IntoResponse {
+    let browser = payload.browser.unwrap_or_else(|| "edge".to_string());
+    match crate::tray::install_extension_to_browser(&browser) {
+        Ok(msg) => Json(serde_json::json!({ "success": true, "message": msg })),
+        Err(err) => Json(serde_json::json!({ "success": false, "error": err })),
+    }
 }
 
 async fn handle_list_downloads(State(state): State<AppState>) -> impl IntoResponse {
