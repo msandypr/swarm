@@ -2,21 +2,22 @@ import {
   createIcons,
   Plus,
   Play,
-  Square,
-  X,
-  Settings,
+  Pause,
+  Trash2,
+  Activity,
   Globe,
+  Settings,
   Info,
-  Power,
-  Folder,
-  FolderCheck,
-  FolderDown,
+  Inbox,
+  ArrowDownCircle,
+  CheckCircle2,
   Film,
   Music,
   Archive,
   FileText,
   Binary,
   File as FileIcon,
+  ArrowDown,
 } from 'lucide';
 
 interface SegmentProgress {
@@ -42,14 +43,14 @@ interface DownloadItem {
 
 type CategoryType =
   | 'all'
+  | 'incomplete'
+  | 'complete'
   | 'video'
   | 'audio'
   | 'compressed'
   | 'document'
   | 'application'
-  | 'misc'
-  | 'complete'
-  | 'incomplete';
+  | 'misc';
 
 // State
 let downloads: Map<string, DownloadItem> = new Map();
@@ -60,10 +61,15 @@ let activePort: number = 52417;
 
 // DOM Elements
 const elTableBody = document.getElementById('table-body') as HTMLTableSectionElement;
-const elStatusSummary = document.getElementById('status-summary') as HTMLSpanElement;
-const elStatusSpeed = document.getElementById('status-speed') as HTMLSpanElement;
+const elEmptyState = document.getElementById('empty-state') as HTMLDivElement;
+const elGlobalSpeed = document.getElementById('global-speed') as HTMLSpanElement;
+const elFooterCount = document.getElementById('footer-count') as HTMLSpanElement;
 
-// Top Buttons
+const elCountAll = document.getElementById('count-all') as HTMLSpanElement;
+const elCountActive = document.getElementById('count-active') as HTMLSpanElement;
+const elCountComplete = document.getElementById('count-complete') as HTMLSpanElement;
+
+// Action Buttons
 const btnResume = document.getElementById('btn-resume') as HTMLButtonElement;
 const btnStop = document.getElementById('btn-stop') as HTMLButtonElement;
 const btnDelete = document.getElementById('btn-delete') as HTMLButtonElement;
@@ -94,21 +100,22 @@ function initLucide() {
     icons: {
       Plus,
       Play,
-      Square,
-      X,
-      Settings,
+      Pause,
+      Trash2,
+      Activity,
       Globe,
+      Settings,
       Info,
-      Power,
-      Folder,
-      FolderCheck,
-      FolderDown,
+      Inbox,
+      ArrowDownCircle,
+      CheckCircle2,
       Film,
       Music,
       Archive,
       FileText,
       Binary,
       File: FileIcon,
+      ArrowDown,
     },
   });
 }
@@ -161,7 +168,7 @@ function setupEventListeners() {
     inputUrl.value = '';
   });
 
-  // Top action bar actions
+  // Action Buttons
   btnResume.addEventListener('click', () => {
     if (selectedId) triggerAction(selectedId, 'resume');
   });
@@ -208,12 +215,7 @@ function setupEventListeners() {
     modalAbout.classList.remove('open');
   });
 
-  // Quit / Close
-  document.getElementById('btn-quit')?.addEventListener('click', () => {
-    window.close();
-  });
-
-  // Tree category selection
+  // Sidebar navigation
   document.querySelectorAll('[data-category]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -223,14 +225,14 @@ function setupEventListeners() {
       const cat = el.getAttribute('data-category');
       if (
         cat === 'all' ||
+        cat === 'incomplete' ||
+        cat === 'complete' ||
         cat === 'video' ||
         cat === 'audio' ||
         cat === 'compressed' ||
         cat === 'document' ||
         cat === 'application' ||
-        cat === 'misc' ||
-        cat === 'complete' ||
-        cat === 'incomplete'
+        cat === 'misc'
       ) {
         currentCategory = cat;
       }
@@ -371,6 +373,14 @@ function connectEventSource() {
 function renderTable() {
   const items = Array.from(downloads.values());
 
+  const activeCount = items.filter((i) => i.status === 'Downloading').length;
+  const completeCount = items.filter((i) => i.status === 'Completed').length;
+
+  elCountAll.textContent = items.length.toString();
+  elCountActive.textContent = activeCount.toString();
+  elCountComplete.textContent = completeCount.toString();
+  elFooterCount.textContent = `${items.length} items`;
+
   const filtered = items.filter((item) => {
     if (currentCategory === 'complete') return item.status === 'Completed';
     if (currentCategory === 'incomplete') return item.status !== 'Completed';
@@ -389,22 +399,28 @@ function renderTable() {
     return true;
   });
 
-  elTableBody.innerHTML = '';
-  filtered.forEach((item) => {
-    const tr = document.createElement('tr');
-    tr.className = `download-row ${selectedId === item.id ? 'selected' : ''}`;
-    tr.id = `row-${item.id}`;
+  if (filtered.length === 0) {
+    elTableBody.innerHTML = '';
+    elEmptyState.style.display = 'flex';
+  } else {
+    elEmptyState.style.display = 'none';
+    elTableBody.innerHTML = '';
+    filtered.forEach((item) => {
+      const tr = document.createElement('tr');
+      tr.className = `data-row ${selectedId === item.id ? 'selected' : ''}`;
+      tr.id = `row-${item.id}`;
 
-    tr.addEventListener('click', () => {
-      document.querySelectorAll('.download-row').forEach((r) => r.classList.remove('selected'));
-      tr.classList.add('selected');
-      selectedId = item.id;
-      updateSelectionButtons();
+      tr.addEventListener('click', () => {
+        document.querySelectorAll('.data-row').forEach((r) => r.classList.remove('selected'));
+        tr.classList.add('selected');
+        selectedId = item.id;
+        updateSelectionButtons();
+      });
+
+      tr.innerHTML = getRowHtml(item);
+      elTableBody.appendChild(tr);
     });
-
-    tr.innerHTML = getRowHtml(item);
-    elTableBody.appendChild(tr);
-  });
+  }
 
   initLucide();
   updateSelectionButtons();
@@ -424,37 +440,56 @@ function getRowHtml(item: DownloadItem): string {
   const sizeStr = item.total_size ? formatBytes(item.total_size) : formatBytes(item.downloaded_bytes);
 
   let statusText = 'Complete';
-  let statusClass = 'status-done';
+  let statusClass = 'complete';
 
   if (item.status === 'Downloading') {
     const pct = item.total_size ? Math.min(100, Math.round((item.downloaded_bytes / item.total_size) * 100)) : 0;
-    statusText = `Downloading ( ${pct}% )`;
-    statusClass = 'status-active';
+    statusText = `${pct}%`;
+    statusClass = 'downloading';
   } else if (item.status === 'Paused') {
     const pct = item.total_size ? Math.min(100, Math.round((item.downloaded_bytes / item.total_size) * 100)) : 0;
-    statusText = `Paused ( ${pct}% )`;
-    statusClass = 'status-paused';
+    statusText = `Paused (${pct}%)`;
+    statusClass = 'paused';
   } else if (item.status === 'Failed') {
-    statusText = 'Error ( 0% )';
-    statusClass = 'status-error';
+    statusText = 'Error';
+    statusClass = 'failed';
   }
 
-  const speedStr = item.status === 'Downloading' && item.speed_bytes_per_sec ? formatBytes(item.speed_bytes_per_sec) + '/s' : '';
-  const etaStr = item.status === 'Downloading' && item.eta_seconds !== undefined ? formatEta(item.eta_seconds) : '';
+  const speedStr = item.status === 'Downloading' && item.speed_bytes_per_sec ? formatBytes(item.speed_bytes_per_sec) + '/s' : '—';
+  const etaStr = item.status === 'Downloading' && item.eta_seconds !== undefined ? formatEta(item.eta_seconds) : '—';
   const dateStr = formatDate(item.created_at);
 
+  const progressBar = item.status === 'Downloading' || item.status === 'Paused'
+    ? getInlineProgressHtml(item)
+    : '';
+
   return `
-    <td class="col-filename">
-      <div class="file-cell">
+    <td class="col-name">
+      <div class="cell-file">
         <i data-lucide="${iconName}"></i>
         <span class="file-text" title="${escapeHtml(item.filename)}">${escapeHtml(item.filename || 'Starting download...')}</span>
       </div>
     </td>
-    <td class="col-size mono-num">${sizeStr}</td>
-    <td class="col-status ${statusClass}">${statusText}</td>
-    <td class="col-speed mono-num">${speedStr}</td>
-    <td class="col-eta mono-num">${etaStr}</td>
-    <td class="col-date mono-num">${dateStr}</td>
+    <td class="col-size mono">${sizeStr}</td>
+    <td class="col-status">
+      <div class="status-cell">
+        <span class="status-label ${statusClass}">${statusText}</span>
+        ${progressBar}
+      </div>
+    </td>
+    <td class="col-speed mono">${speedStr}</td>
+    <td class="col-eta mono">${etaStr}</td>
+    <td class="col-date mono">${dateStr}</td>
+  `;
+}
+
+function getInlineProgressHtml(item: DownloadItem): string {
+  const p = item.total_size ? Math.min(100, (item.downloaded_bytes / item.total_size) * 100) : 0;
+  const pausedClass = item.status === 'Paused' ? 'paused' : '';
+  return `
+    <div class="inline-progress">
+      <div class="progress-track ${pausedClass}" style="width:${p}%"></div>
+    </div>
   `;
 }
 
@@ -496,8 +531,7 @@ function updateGlobalMetrics() {
     }
   }
 
-  elStatusSpeed.textContent = totalSpeed > 0 ? `${formatBytes(totalSpeed)}/s` : '0.0 KB/s';
-  elStatusSummary.textContent = `${downloads.size} downloads`;
+  elGlobalSpeed.textContent = totalSpeed > 0 ? `${formatBytes(totalSpeed)}/s` : '0.0 KB/s';
 }
 
 function getFileLucideIcon(filename?: string): string {
@@ -535,8 +569,7 @@ function formatDate(timestamp?: number): string {
   const day = d.getDate();
   const h = String(d.getHours()).padStart(2, '0');
   const min = String(d.getMinutes()).padStart(2, '0');
-  const sec = String(d.getSeconds()).padStart(2, '0');
-  return `${m} ${day} ${h}:${min}:${sec}`;
+  return `${m} ${day} ${h}:${min}`;
 }
 
 function escapeHtml(text?: string): string {

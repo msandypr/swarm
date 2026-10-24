@@ -3,49 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Swarm Download Manager</title>
+  <title>Swarm</title>
   <link rel="icon" type="image/png" href="./favicon.png" />
-  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))n(s);new MutationObserver(s=>{for(const a of s)if(a.type==="childList")for(const r of a.addedNodes)r.tagName==="LINK"&&r.rel==="modulepreload"&&n(r)}).observe(document,{childList:!0,subtree:!0});function o(s){const a={};return s.integrity&&(a.integrity=s.integrity),s.referrerPolicy&&(a.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?a.credentials="include":s.crossOrigin==="anonymous"?a.credentials="omit":a.credentials="same-origin",a}function n(s){if(s.ep)return;s.ep=!0;const a=o(s);fetch(s.href,a)}})();/**
+  <script type="module" crossorigin>(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))n(s);new MutationObserver(s=>{for(const a of s)if(a.type==="childList")for(const c of a.addedNodes)c.tagName==="LINK"&&c.rel==="modulepreload"&&n(c)}).observe(document,{childList:!0,subtree:!0});function o(s){const a={};return s.integrity&&(a.integrity=s.integrity),s.referrerPolicy&&(a.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?a.credentials="include":s.crossOrigin==="anonymous"?a.credentials="omit":a.credentials="same-origin",a}function n(s){if(s.ep)return;s.ep=!0;const a=o(s);fetch(s.href,a)}})();/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const z={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round"};/**
+ */const P={xmlns:"http://www.w3.org/2000/svg",width:24,height:24,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor","stroke-width":2,"stroke-linecap":"round","stroke-linejoin":"round"};/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const P=([e,t,o])=>{const n=document.createElementNS("http://www.w3.org/2000/svg",e);return Object.keys(t).forEach(s=>{n.setAttribute(s,String(t[s]))}),o?.length&&o.forEach(s=>{const a=P(s);n.appendChild(a)}),n},V=(e,t={})=>{const n={...z,...t};return P(["svg",n,e])};/**
+ */const D=([e,t,o])=>{const n=document.createElementNS("http://www.w3.org/2000/svg",e);return Object.keys(t).forEach(s=>{n.setAttribute(s,String(t[s]))}),o?.length&&o.forEach(s=>{const a=D(s);n.appendChild(a)}),n},R=(e,t={})=>{const n={...P,...t};return D(["svg",n,e])};/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const R=(...e)=>e.filter((t,o,n)=>!!t&&t.trim()!==""&&n.indexOf(t)===o).join(" ").trim();/**
+ */const U=(...e)=>e.filter((t,o,n)=>!!t&&t.trim()!==""&&n.indexOf(t)===o).join(" ").trim();/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const U=e=>{for(const t in e)if(t.startsWith("aria-")||t==="role"||t==="title")return!0;return!1};/**
+ */const J=e=>{for(const t in e)if(t.startsWith("aria-")||t==="role"||t==="title")return!0;return!1};/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const J=e=>{let t="",o=!1;for(const n of e){if(n==="-"||n==="_"||n<=" "){o=t.length>0;continue}t.length===0?t+=n.toLowerCase():t+=o?n.toUpperCase():n,o=!1}return t};/**
+ */const G=e=>{let t="",o=!1;for(const n of e){if(n==="-"||n==="_"||n<=" "){o=t.length>0;continue}t.length===0?t+=n.toLowerCase():t+=o?n.toUpperCase():n,o=!1}return t};/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const G=e=>{const t=J(e);return t.charAt(0).toUpperCase()+t.slice(1)};/**
+ */const K=e=>{const t=G(e);return t.charAt(0).toUpperCase()+t.slice(1)};/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const K=e=>Array.from(e.attributes).reduce((t,o)=>(t[o.name]=o.value,t),{}),x=e=>typeof e=="string"?e:!e||!e.class?"":e.class&&typeof e.class=="string"?e.class.split(" "):e.class&&Array.isArray(e.class)?e.class:"",I=(e,{nameAttr:t,icons:o,attrs:n})=>{const s=e.getAttribute(t);if(s==null)return;const a=G(s),r=o[a];if(!r)return console.warn(`${e.outerHTML} icon name was not found in the provided icons object.`);const d=K(e),v=U(d)?{}:{"aria-hidden":"true"},S={...z,"data-lucide":s,...v,...n,...d},H=x(d),j=x(n),B=R("lucide",`lucide-${s}`,...H,...j);B&&Object.assign(S,{class:B});const q=V(r,S);return e.parentNode?.replaceChild(q,e)};/**
+ */const W=e=>Array.from(e.attributes).reduce((t,o)=>(t[o.name]=o.value,t),{}),I=e=>typeof e=="string"?e:!e||!e.class?"":e.class&&typeof e.class=="string"?e.class.split(" "):e.class&&Array.isArray(e.class)?e.class:"",A=(e,{nameAttr:t,icons:o,attrs:n})=>{const s=e.getAttribute(t);if(s==null)return;const a=K(s),c=o[a];if(!c)return console.warn(`${e.outerHTML} icon name was not found in the provided icons object.`);const d=W(e),b=J(d)?{}:{"aria-hidden":"true"},f={...P,"data-lucide":s,...b,...n,...d},j=I(d),q=I(n),B=U("lucide",`lucide-${s}`,...j,...q);B&&Object.assign(f,{class:B});const V=R(c,f);return e.parentNode?.replaceChild(V,e)};/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const W=[["rect",{width:"20",height:"5",x:"2",y:"3",rx:"1"}],["path",{d:"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"}],["path",{d:"M10 12h4"}]];/**
+ */const Q=[["path",{d:"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const X=[["rect",{width:"20",height:"5",x:"2",y:"3",rx:"1"}],["path",{d:"M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"}],["path",{d:"M10 12h4"}]];/**
+ * @license lucide v1.61.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const Y=[["path",{d:"M12 5v14"}],["path",{d:"m19 12-7 7-7-7"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
@@ -55,317 +65,327 @@
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const X=[["path",{d:"M21 16V3a1 1 0 0 0-1.28-.96l-10 2.917a1 1 0 0 0-.72.96V19"}],["circle",{cx:"18",cy:"16",r:"3"}],["circle",{cx:"6",cy:"19",r:"3"}]];/**
+ */const ee=[["circle",{cx:"12",cy:"12",r:"10"}],["path",{d:"M12 8v8"}],["path",{d:"m8 12 4 4 4-4"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const Q=[["path",{d:"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"}],["path",{d:"M14 2v5a1 1 0 0 0 1 1h5"}],["path",{d:"M10 9H8"}],["path",{d:"M16 13H8"}],["path",{d:"M16 17H8"}]];/**
+ */const te=[["circle",{cx:"12",cy:"12",r:"10"}],["path",{d:"m16 9-5.5 5.5L8 12"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const Y=[["path",{d:"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"}],["path",{d:"M14 2v5a1 1 0 0 0 1 1h5"}]];/**
+ */const ne=[["path",{d:"M21 16V3a1 1 0 0 0-1.28-.96l-10 2.917a1 1 0 0 0-.72.96V19"}],["circle",{cx:"18",cy:"16",r:"3"}],["circle",{cx:"6",cy:"19",r:"3"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const ee=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2"}],["path",{d:"M7 3v18"}],["path",{d:"M3 7.5h4"}],["path",{d:"M3 12h18"}],["path",{d:"M3 16.5h4"}],["path",{d:"M17 3v18"}],["path",{d:"M17 7.5h4"}],["path",{d:"M17 16.5h4"}]];/**
+ */const oe=[["path",{d:"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"}],["path",{d:"M14 2v5a1 1 0 0 0 1 1h5"}],["path",{d:"M10 9H8"}],["path",{d:"M16 13H8"}],["path",{d:"M16 17H8"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const te=[["path",{d:"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"}],["path",{d:"m9 13 2 2 4-4"}]];/**
+ */const se=[["path",{d:"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"}],["path",{d:"M14 2v5a1 1 0 0 0 1 1h5"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const ne=[["path",{d:"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"}],["path",{d:"M12 10v6"}],["path",{d:"m15 13-3 3-3-3"}]];/**
+ */const ae=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2"}],["path",{d:"M7 3v18"}],["path",{d:"M3 7.5h4"}],["path",{d:"M3 12h18"}],["path",{d:"M3 16.5h4"}],["path",{d:"M17 3v18"}],["path",{d:"M17 7.5h4"}],["path",{d:"M17 16.5h4"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const oe=[["path",{d:"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"}]];/**
+ */const ce=[["circle",{cx:"12",cy:"12",r:"10"}],["path",{d:"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"}],["path",{d:"M2 12h20"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const se=[["circle",{cx:"12",cy:"12",r:"10"}],["path",{d:"M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"}],["path",{d:"M2 12h20"}]];/**
+ */const re=[["polyline",{points:"22 12 16 12 14 15 10 15 8 12 2 12"}],["path",{d:"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const ae=[["circle",{cx:"12",cy:"12",r:"10"}],["path",{d:"M12 16v-4"}],["path",{d:"M12 8h.01"}]];/**
+ */const le=[["circle",{cx:"12",cy:"12",r:"10"}],["path",{d:"M12 16v-4"}],["path",{d:"M12 8h.01"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const re=[["path",{d:"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"}]];/**
+ */const ie=[["rect",{x:"14",y:"3",width:"5",height:"18",rx:"1"}],["rect",{x:"5",y:"3",width:"5",height:"18",rx:"1"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const ce=[["path",{d:"M5 12h14"}],["path",{d:"M12 5v14"}]];/**
+ */const de=[["path",{d:"M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const ie=[["path",{d:"M12 2v10"}],["path",{d:"M18.4 6.6a9 9 0 1 1-12.77.04"}]];/**
+ */const ue=[["path",{d:"M5 12h14"}],["path",{d:"M12 5v14"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const de=[["path",{d:"M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"}],["circle",{cx:"12",cy:"12",r:"3"}]];/**
+ */const pe=[["path",{d:"M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"}],["circle",{cx:"12",cy:"12",r:"3"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const le=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2"}]];/**
+ */const me=[["path",{d:"M10 11v6"}],["path",{d:"M14 11v6"}],["path",{d:"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"}],["path",{d:"M3 6h18"}],["path",{d:"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"}]];/**
  * @license lucide v1.61.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const ue=[["path",{d:"M18 6 6 18"}],["path",{d:"m6 6 12 12"}]];/**
- * @license lucide v1.61.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */const D=({icons:e={},nameAttr:t="data-lucide",attrs:o={},root:n=document,inTemplates:s}={})=>{if(!Object.values(e).length)throw new Error(`Please provide an icons object.
+ */const T=({icons:e={},nameAttr:t="data-lucide",attrs:o={},root:n=document,inTemplates:s}={})=>{if(!Object.values(e).length)throw new Error(`Please provide an icons object.
 If you want to use all the icons you can import it like:
  \`import { createIcons, icons } from 'lucide';
-lucide.createIcons({icons});\``);if(typeof n>"u")throw new Error("`createIcons()` only works in a browser environment.");if(Array.from(n.querySelectorAll(`[${t}]`)).forEach(r=>I(r,{nameAttr:t,icons:e,attrs:o})),s&&Array.from(n.querySelectorAll("template")).forEach(d=>D({icons:e,nameAttr:t,attrs:o,root:d.content,inTemplates:s})),t==="data-lucide"){const r=n.querySelectorAll("[icon-name]");r.length>0&&(console.warn("[Lucide] Some icons were found with the now deprecated icon-name attribute. These will still be replaced for backwards compatibility, but will no longer be supported in v1.0 and you should switch to data-lucide"),Array.from(r).forEach(d=>I(d,{nameAttr:"icon-name",icons:e,attrs:o})))}};let u=new Map,i=null,l="all",c="",k=52417;const A=document.getElementById("table-body"),pe=document.getElementById("status-summary"),me=document.getElementById("status-speed"),p=document.getElementById("btn-resume"),m=document.getElementById("btn-stop"),g=document.getElementById("btn-delete"),f=document.getElementById("modal-url"),fe=document.getElementById("form-new-url"),h=document.getElementById("input-url"),he=document.getElementById("select-sockets"),b=document.getElementById("modal-browsers"),ge=document.getElementById("token-input"),E=document.getElementById("btn-copy-token"),ye=document.getElementById("active-port"),L=document.getElementById("modal-about");function we(){ve(),_(),be(),T(),Me()}function _(){D({icons:{Plus:ce,Play:re,Square:le,X:ue,Settings:de,Globe:se,Info:ae,Power:ie,Folder:oe,FolderCheck:te,FolderDown:ne,Film:ee,Music:X,Archive:W,FileText:Q,Binary:Z,File:Y}})}function ve(){const t=new URLSearchParams(window.location.search).get("t");t?(c=t,localStorage.setItem("swarm_token",t),window.history.replaceState({},document.title,window.location.pathname)):c=localStorage.getItem("swarm_token")||"",ge.value=c}function be(){document.getElementById("btn-new-url")?.addEventListener("click",()=>{f.classList.add("open"),h.focus(),navigator.clipboard&&navigator.clipboard.readText&&navigator.clipboard.readText().then(e=>{e&&(e.startsWith("http://")||e.startsWith("https://"))&&(h.value=e)}).catch(()=>{})}),document.getElementById("btn-close-url-dialog")?.addEventListener("click",()=>{f.classList.remove("open")}),document.getElementById("btn-cancel-url")?.addEventListener("click",()=>{f.classList.remove("open")}),fe.addEventListener("submit",async e=>{e.preventDefault();const t=h.value.trim(),o=parseInt(he.value)||8;t&&(await Ee(t,o),f.classList.remove("open"),h.value="")}),p.addEventListener("click",()=>{i&&$(i,"resume")}),m.addEventListener("click",()=>{i&&$(i,"pause")}),g.addEventListener("click",()=>{i&&confirm("Delete this download?")&&Le(i,!0)}),document.getElementById("btn-browsers")?.addEventListener("click",()=>{b.classList.add("open")}),document.getElementById("btn-close-browsers-dialog")?.addEventListener("click",()=>{b.classList.remove("open")}),document.getElementById("btn-close-browsers")?.addEventListener("click",()=>{b.classList.remove("open")}),E.addEventListener("click",()=>{c&&(navigator.clipboard.writeText(c),E.textContent="Copied",setTimeout(()=>E.textContent="Copy",1500))}),document.getElementById("btn-about")?.addEventListener("click",()=>{L.classList.add("open")}),document.getElementById("btn-close-about-dialog")?.addEventListener("click",()=>{L.classList.remove("open")}),document.getElementById("btn-close-about")?.addEventListener("click",()=>{L.classList.remove("open")}),document.getElementById("btn-quit")?.addEventListener("click",()=>{window.close()}),document.querySelectorAll("[data-category]").forEach(e=>{e.addEventListener("click",t=>{t.stopPropagation(),document.querySelectorAll("[data-category]").forEach(n=>n.classList.remove("active")),e.classList.add("active");const o=e.getAttribute("data-category");(o==="all"||o==="video"||o==="audio"||o==="compressed"||o==="document"||o==="application"||o==="misc"||o==="complete"||o==="incomplete")&&(l=o),w()})})}async function T(){try{const e=await fetch("/api/ping");e.ok&&(k=(await e.json()).port,ye.textContent=k.toString());const t={};c&&(t.Authorization=`Bearer ${c}`);const o=await fetch("/api/downloads",{credentials:"include",headers:t});if(o.ok){const n=await o.json();u.clear(),n.forEach(s=>u.set(s.id,s)),w()}}catch(e){console.error("Fetch error:",e)}}async function Ee(e,t){try{const o={"Content-Type":"application/json"};c&&(o.Authorization=`Bearer ${c}`);const n=await fetch("/api/downloads",{method:"POST",headers:o,body:JSON.stringify({url:e,connections:t})});n.ok?await T():alert("Failed: "+await n.text())}catch{alert("Network error adding download")}}async function $(e,t){try{const o={"Content-Type":"application/json"};c&&(o.Authorization=`Bearer ${c}`),await fetch(`/api/downloads/${e}`,{method:"PATCH",headers:o,body:JSON.stringify({action:t})});const n=u.get(e);n&&t==="pause"&&(n.status="Paused",n.speed_bytes_per_sec=0,N(n),M())}catch(o){console.error("Action error:",o)}}async function Le(e,t=!1){try{const o={};c&&(o.Authorization=`Bearer ${c}`),await fetch(`/api/downloads/${e}?delete_file=${t}`,{method:"DELETE",headers:o}),u.delete(e),i===e&&(i=null),w()}catch(o){console.error("Delete error:",o)}}function Me(){const e=c?`/api/events?t=${encodeURIComponent(c)}`:"/api/events";new EventSource(e).addEventListener("progress",o=>{try{const n=JSON.parse(o.data),s=n.id;let a=u.get(s);a?(a.filename=n.filename||a.filename,a.total_size=n.total_size||a.total_size,a.downloaded_bytes=n.downloaded_bytes,a.status=n.status,a.speed_bytes_per_sec=n.speed_bytes_per_sec,a.eta_seconds=n.eta_seconds,a.segments=n.segments,N(a)):(a={id:n.id,url:"",filename:n.filename,output_path:"",total_size:n.total_size,downloaded_bytes:n.downloaded_bytes,status:n.status,speed_bytes_per_sec:n.speed_bytes_per_sec,eta_seconds:n.eta_seconds,segments:n.segments},u.set(s,a),w()),F()}catch(n){console.error("SSE error:",n)}})}function w(){const t=Array.from(u.values()).filter(o=>{if(l==="complete")return o.status==="Completed";if(l==="incomplete")return o.status!=="Completed";if(l==="all")return!0;const n=(o.filename.split(".").pop()||"").toLowerCase();return l==="video"?["mp4","mkv","avi","mov","webm"].includes(n):l==="audio"?["mp3","wav","flac","aac"].includes(n):l==="compressed"?["zip","rar","7z","tar","gz","iso"].includes(n):l==="document"?["pdf","doc","docx","txt","epub"].includes(n):l==="application"?["exe","msi","bin"].includes(n):l==="misc"?!["mp4","mkv","avi","mov","webm","mp3","wav","flac","aac","zip","rar","7z","tar","gz","iso","pdf","doc","docx","txt","epub","exe","msi","bin"].includes(n):!0});A.innerHTML="",t.forEach(o=>{const n=document.createElement("tr");n.className=`download-row ${i===o.id?"selected":""}`,n.id=`row-${o.id}`,n.addEventListener("click",()=>{document.querySelectorAll(".download-row").forEach(s=>s.classList.remove("selected")),n.classList.add("selected"),i=o.id,M()}),n.innerHTML=O(o),A.appendChild(n)}),_(),M(),F()}function N(e){const t=document.getElementById(`row-${e.id}`);t&&(t.innerHTML=O(e),_())}function O(e){const t=_e(e.filename),o=e.total_size?y(e.total_size):y(e.downloaded_bytes);let n="Complete",s="status-done";e.status==="Downloading"?(n=`Downloading ( ${e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0}% )`,s="status-active"):e.status==="Paused"?(n=`Paused ( ${e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0}% )`,s="status-paused"):e.status==="Failed"&&(n="Error ( 0% )",s="status-error");const a=e.status==="Downloading"&&e.speed_bytes_per_sec?y(e.speed_bytes_per_sec)+"/s":"",r=e.status==="Downloading"&&e.eta_seconds!==void 0?Se(e.eta_seconds):"",d=Be(e.created_at);return`
-    <td class="col-filename">
-      <div class="file-cell">
+lucide.createIcons({icons});\``);if(typeof n>"u")throw new Error("`createIcons()` only works in a browser environment.");if(Array.from(n.querySelectorAll(`[${t}]`)).forEach(c=>A(c,{nameAttr:t,icons:e,attrs:o})),s&&Array.from(n.querySelectorAll("template")).forEach(d=>T({icons:e,nameAttr:t,attrs:o,root:d.content,inTemplates:s})),t==="data-lucide"){const c=n.querySelectorAll("[icon-name]");c.length>0&&(console.warn("[Lucide] Some icons were found with the now deprecated icon-name attribute. These will still be replaced for backwards compatibility, but will no longer be supported in v1.0 and you should switch to data-lucide"),Array.from(c).forEach(d=>A(d,{nameAttr:"icon-name",icons:e,attrs:o})))}};let u=new Map,l=null,i="all",r="",S=52417;const E=document.getElementById("table-body"),k=document.getElementById("empty-state"),fe=document.getElementById("global-speed"),he=document.getElementById("footer-count"),ge=document.getElementById("count-all"),ye=document.getElementById("count-active"),we=document.getElementById("count-complete"),p=document.getElementById("btn-resume"),m=document.getElementById("btn-stop"),y=document.getElementById("btn-delete"),h=document.getElementById("modal-url"),ve=document.getElementById("form-new-url"),g=document.getElementById("input-url"),be=document.getElementById("select-sockets"),L=document.getElementById("modal-browsers"),Ee=document.getElementById("token-input"),M=document.getElementById("btn-copy-token"),Le=document.getElementById("active-port"),_=document.getElementById("modal-about");function Me(){_e(),x(),Ce(),N(),Ie()}function x(){T({icons:{Plus:ue,Play:de,Pause:ie,Trash2:me,Activity:Q,Globe:ce,Settings:pe,Info:le,Inbox:re,ArrowDownCircle:ee,CheckCircle2:te,Film:ae,Music:ne,Archive:X,FileText:oe,Binary:Z,File:se,ArrowDown:Y}})}function _e(){const t=new URLSearchParams(window.location.search).get("t");t?(r=t,localStorage.setItem("swarm_token",t),window.history.replaceState({},document.title,window.location.pathname)):r=localStorage.getItem("swarm_token")||"",Ee.value=r}function Ce(){document.getElementById("btn-new-url")?.addEventListener("click",()=>{h.classList.add("open"),g.focus(),navigator.clipboard&&navigator.clipboard.readText&&navigator.clipboard.readText().then(e=>{e&&(e.startsWith("http://")||e.startsWith("https://"))&&(g.value=e)}).catch(()=>{})}),document.getElementById("btn-close-url-dialog")?.addEventListener("click",()=>{h.classList.remove("open")}),document.getElementById("btn-cancel-url")?.addEventListener("click",()=>{h.classList.remove("open")}),ve.addEventListener("submit",async e=>{e.preventDefault();const t=g.value.trim(),o=parseInt(be.value)||8;t&&(await xe(t,o),h.classList.remove("open"),g.value="")}),p.addEventListener("click",()=>{l&&$(l,"resume")}),m.addEventListener("click",()=>{l&&$(l,"pause")}),y.addEventListener("click",()=>{l&&confirm("Delete this download?")&&Be(l,!0)}),document.getElementById("btn-browsers")?.addEventListener("click",()=>{L.classList.add("open")}),document.getElementById("btn-close-browsers-dialog")?.addEventListener("click",()=>{L.classList.remove("open")}),document.getElementById("btn-close-browsers")?.addEventListener("click",()=>{L.classList.remove("open")}),M.addEventListener("click",()=>{r&&(navigator.clipboard.writeText(r),M.textContent="Copied",setTimeout(()=>M.textContent="Copy",1500))}),document.getElementById("btn-about")?.addEventListener("click",()=>{_.classList.add("open")}),document.getElementById("btn-close-about-dialog")?.addEventListener("click",()=>{_.classList.remove("open")}),document.getElementById("btn-close-about")?.addEventListener("click",()=>{_.classList.remove("open")}),document.querySelectorAll("[data-category]").forEach(e=>{e.addEventListener("click",t=>{t.stopPropagation(),document.querySelectorAll("[data-category]").forEach(n=>n.classList.remove("active")),e.classList.add("active");const o=e.getAttribute("data-category");(o==="all"||o==="incomplete"||o==="complete"||o==="video"||o==="audio"||o==="compressed"||o==="document"||o==="application"||o==="misc")&&(i=o),v()})})}async function N(){try{const e=await fetch("/api/ping");e.ok&&(S=(await e.json()).port,Le.textContent=S.toString());const t={};r&&(t.Authorization=`Bearer ${r}`);const o=await fetch("/api/downloads",{credentials:"include",headers:t});if(o.ok){const n=await o.json();u.clear(),n.forEach(s=>u.set(s.id,s)),v()}}catch(e){console.error("Fetch error:",e)}}async function xe(e,t){try{const o={"Content-Type":"application/json"};r&&(o.Authorization=`Bearer ${r}`);const n=await fetch("/api/downloads",{method:"POST",headers:o,body:JSON.stringify({url:e,connections:t})});n.ok?await N():alert("Failed: "+await n.text())}catch{alert("Network error adding download")}}async function $(e,t){try{const o={"Content-Type":"application/json"};r&&(o.Authorization=`Bearer ${r}`),await fetch(`/api/downloads/${e}`,{method:"PATCH",headers:o,body:JSON.stringify({action:t})});const n=u.get(e);n&&t==="pause"&&(n.status="Paused",n.speed_bytes_per_sec=0,H(n),C())}catch(o){console.error("Action error:",o)}}async function Be(e,t=!1){try{const o={};r&&(o.Authorization=`Bearer ${r}`),await fetch(`/api/downloads/${e}?delete_file=${t}`,{method:"DELETE",headers:o}),u.delete(e),l===e&&(l=null),v()}catch(o){console.error("Delete error:",o)}}function Ie(){const e=r?`/api/events?t=${encodeURIComponent(r)}`:"/api/events";new EventSource(e).addEventListener("progress",o=>{try{const n=JSON.parse(o.data),s=n.id;let a=u.get(s);a?(a.filename=n.filename||a.filename,a.total_size=n.total_size||a.total_size,a.downloaded_bytes=n.downloaded_bytes,a.status=n.status,a.speed_bytes_per_sec=n.speed_bytes_per_sec,a.eta_seconds=n.eta_seconds,a.segments=n.segments,H(a)):(a={id:n.id,url:"",filename:n.filename,output_path:"",total_size:n.total_size,downloaded_bytes:n.downloaded_bytes,status:n.status,speed_bytes_per_sec:n.speed_bytes_per_sec,eta_seconds:n.eta_seconds,segments:n.segments},u.set(s,a),v()),F()}catch(n){console.error("SSE error:",n)}})}function v(){const e=Array.from(u.values()),t=e.filter(s=>s.status==="Downloading").length,o=e.filter(s=>s.status==="Completed").length;ge.textContent=e.length.toString(),ye.textContent=t.toString(),we.textContent=o.toString(),he.textContent=`${e.length} items`;const n=e.filter(s=>{if(i==="complete")return s.status==="Completed";if(i==="incomplete")return s.status!=="Completed";if(i==="all")return!0;const a=(s.filename.split(".").pop()||"").toLowerCase();return i==="video"?["mp4","mkv","avi","mov","webm"].includes(a):i==="audio"?["mp3","wav","flac","aac"].includes(a):i==="compressed"?["zip","rar","7z","tar","gz","iso"].includes(a):i==="document"?["pdf","doc","docx","txt","epub"].includes(a):i==="application"?["exe","msi","bin"].includes(a):i==="misc"?!["mp4","mkv","avi","mov","webm","mp3","wav","flac","aac","zip","rar","7z","tar","gz","iso","pdf","doc","docx","txt","epub","exe","msi","bin"].includes(a):!0});n.length===0?(E.innerHTML="",k.style.display="flex"):(k.style.display="none",E.innerHTML="",n.forEach(s=>{const a=document.createElement("tr");a.className=`data-row ${l===s.id?"selected":""}`,a.id=`row-${s.id}`,a.addEventListener("click",()=>{document.querySelectorAll(".data-row").forEach(c=>c.classList.remove("selected")),a.classList.add("selected"),l=s.id,C()}),a.innerHTML=O(s),E.appendChild(a)})),x(),C(),F()}function H(e){const t=document.getElementById(`row-${e.id}`);t&&(t.innerHTML=O(e),x())}function O(e){const t=Se(e.filename),o=e.total_size?w(e.total_size):w(e.downloaded_bytes);let n="Complete",s="complete";e.status==="Downloading"?(n=`${e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0}%`,s="downloading"):e.status==="Paused"?(n=`Paused (${e.total_size?Math.min(100,Math.round(e.downloaded_bytes/e.total_size*100)):0}%)`,s="paused"):e.status==="Failed"&&(n="Error",s="failed");const a=e.status==="Downloading"&&e.speed_bytes_per_sec?w(e.speed_bytes_per_sec)+"/s":"—",c=e.status==="Downloading"&&e.eta_seconds!==void 0?ke(e.eta_seconds):"—",d=$e(e.created_at),b=e.status==="Downloading"||e.status==="Paused"?Ae(e):"";return`
+    <td class="col-name">
+      <div class="cell-file">
         <i data-lucide="${t}"></i>
-        <span class="file-text" title="${C(e.filename)}">${C(e.filename||"Starting download...")}</span>
+        <span class="file-text" title="${z(e.filename)}">${z(e.filename||"Starting download...")}</span>
       </div>
     </td>
-    <td class="col-size mono-num">${o}</td>
-    <td class="col-status ${s}">${n}</td>
-    <td class="col-speed mono-num">${a}</td>
-    <td class="col-eta mono-num">${r}</td>
-    <td class="col-date mono-num">${d}</td>
-  `}function M(){if(!i){p.classList.add("disabled"),m.classList.add("disabled"),g.classList.add("disabled");return}const e=u.get(i);if(!e){p.classList.add("disabled"),m.classList.add("disabled"),g.classList.add("disabled");return}g.classList.remove("disabled"),e.status==="Downloading"?(p.classList.add("disabled"),m.classList.remove("disabled")):e.status==="Paused"?(p.classList.remove("disabled"),m.classList.add("disabled")):(p.classList.add("disabled"),m.classList.add("disabled"))}function F(){let e=0;for(const t of u.values())t.status==="Downloading"&&t.speed_bytes_per_sec&&(e+=t.speed_bytes_per_sec);me.textContent=e>0?`${y(e)}/s`:"0.0 KB/s",pe.textContent=`${u.size} downloads`}function _e(e){const t=(e?.split(".").pop()||"").toLowerCase();return["mp4","mkv","avi","mov","webm"].includes(t)?"film":["mp3","wav","flac","aac"].includes(t)?"music":["zip","rar","7z","tar","gz","iso"].includes(t)?"archive":["pdf","doc","docx","txt","epub"].includes(t)?"file-text":["exe","msi","bin"].includes(t)?"binary":"file"}function y(e){if(e<=0)return"0 B";const t=1024,o=["B","KB","MB","GB","TB"],n=Math.floor(Math.log(e)/Math.log(t));return parseFloat((e/Math.pow(t,n)).toFixed(1))+" "+o[n]}function Se(e){if(e<=0)return"0s";if(e<60)return`${e}s`;const t=Math.floor(e/60),o=e%60;return t<60?`${t}m ${o}s`:`${Math.floor(t/60)}h ${t%60}m`}function Be(e){const t=e?new Date(e*1e3):new Date,n=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()],s=t.getDate(),a=String(t.getHours()).padStart(2,"0"),r=String(t.getMinutes()).padStart(2,"0"),d=String(t.getSeconds()).padStart(2,"0");return`${n} ${s} ${a}:${r}:${d}`}function C(e){return e?e.replace(/[&<>"']/g,t=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[t]||t):""}window.addEventListener("DOMContentLoaded",we);</script>
-  <style rel="stylesheet" crossorigin>:root{--bg-main: #1f1f1f;--bg-header: #282828;--bg-sidebar: #222222;--bg-table: #1c1c1c;--bg-table-alt: #1e1e1e;--bg-table-hover: #2e2e2e;--bg-table-selected: #004b87;--bg-dialog: #2b2b2b;--bg-input: #181818;--border-dark: #333333;--border-light: #3f3f3f;--border-grid: #2e2e2e;--text-main: #ececec;--text-dim: #999999;--text-muted: #666666;--text-selected: #ffffff;--color-blue: #3b82f6;--color-red: #ef4444;--color-green: #10b981;--color-orange: #f59e0b;--font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;--font-data: "Segoe UI", Arial, sans-serif;--font-mono: Consolas, "Lucida Console", monospace}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font-system);background-color:var(--bg-main);color:var(--text-main);height:100vh;overflow:hidden;user-select:none;font-size:12px;line-height:1.3}#app{display:flex;flex-direction:column;height:100%}.toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px 6px;background-color:var(--bg-header);border-bottom:1px solid var(--border-dark);flex-shrink:0}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:16px}.tool-btn{background:transparent;border:none;color:var(--text-main);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:2px 6px;border-radius:4px}.tool-btn:hover{background-color:#ffffff0d}.tool-btn.disabled{opacity:.35;cursor:default;pointer-events:none}.tool-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff}.tool-icon svg{width:18px;height:18px}.btn-blue{background-color:#2563eb}.btn-red{background-color:#dc2626}.btn-icon-only{background-color:#3b82f6}.tool-label{font-size:11px;font-weight:500;color:var(--text-main)}.workspace{display:flex;flex:1;overflow:hidden}.sidebar{width:175px;background-color:var(--bg-sidebar);border-right:1px solid var(--border-dark);overflow-y:auto;padding:8px 6px;flex-shrink:0}.tree-menu{list-style:none}.tree-item{margin-bottom:2px}.tree-row{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:3px;cursor:pointer;color:var(--text-main);font-weight:500}.tree-row:hover{background-color:#ffffff0d}.tree-item.active>.tree-row{background-color:var(--bg-table-selected);color:var(--text-selected)}.tree-icon{width:14px;height:14px;color:#3b82f6;flex-shrink:0}.tree-sub{list-style:none;padding-left:20px;margin-top:2px}.tree-sub-item{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:3px;cursor:pointer;color:var(--text-dim);font-size:11.5px}.tree-sub-item:hover{background-color:#ffffff0d;color:var(--text-main)}.tree-sub-item.active{background-color:var(--bg-table-selected);color:var(--text-selected)}.tree-sub-item .tree-icon{width:13px;height:13px;color:var(--text-dim)}.main-table-pane{flex:1;background-color:var(--bg-table);overflow:auto;display:flex;flex-direction:column}.table-container{min-width:600px;height:100%}.download-table{width:100%;border-collapse:collapse;font-family:var(--font-data);font-size:12px;table-layout:fixed}.download-table thead{position:sticky;top:0;background-color:#292929;z-index:5}.download-table th{padding:5px 8px;text-align:left;font-weight:600;color:var(--text-dim);border-right:1px solid var(--border-dark);border-bottom:1px solid var(--border-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.download-table th:last-child{border-right:none}.download-table td{padding:4px 8px;border-bottom:1px solid var(--border-grid);border-right:1px solid var(--border-grid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}.download-table td:last-child{border-right:none}.col-filename{width:40%}.col-size{width:12%;text-align:right}.col-status{width:16%}.col-speed,.col-eta{width:14%;text-align:right}.col-date{width:120px;text-align:right}.download-row{cursor:pointer;height:25px}.download-row:hover{background-color:var(--bg-table-hover)}.download-row.selected{background-color:var(--bg-table-selected)!important;color:var(--text-selected)!important}.download-row.selected td{color:var(--text-selected)!important;border-bottom-color:#003e73}.file-cell{display:flex;align-items:center;gap:6px;overflow:hidden}.file-cell svg{width:14px;height:14px;color:var(--color-blue);flex-shrink:0}.file-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mono-num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}.status-done{color:var(--color-green)}.status-active{color:var(--color-blue)}.status-paused{color:var(--color-orange)}.status-error{color:var(--color-red)}.download-row.selected .status-done,.download-row.selected .status-active,.download-row.selected .status-paused,.download-row.selected .status-error{color:#fff!important}.statusbar{display:flex;align-items:center;justify-content:space-between;padding:3px 12px;background-color:var(--bg-header);border-top:1px solid var(--border-dark);font-size:11px;color:var(--text-dim);height:22px;flex-shrink:0}.modal-layer{position:fixed;inset:0;background-color:#00000080;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:100}.modal-layer.open{opacity:1;pointer-events:auto}.compact-dialog{background-color:var(--bg-dialog);border:1px solid var(--border-light);width:420px;max-width:90%;box-shadow:0 8px 24px #0009;border-radius:4px;overflow:hidden}.dialog-titlebar{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background-color:#242424;border-bottom:1px solid var(--border-dark);font-weight:600;font-size:11.5px}.dialog-x{background:transparent;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;line-height:1}.dialog-x:hover{color:var(--text-main)}.dialog-field{padding:10px;display:flex;flex-direction:column;gap:4px}.dialog-field label,.dialog-options label{font-size:11px;color:var(--text-dim)}.dialog-field textarea,.dialog-options select,.token-copy-box input{background-color:var(--bg-input);border:1px solid var(--border-dark);color:var(--text-main);padding:6px 8px;font-size:11.5px;font-family:inherit;outline:none;border-radius:3px}.dialog-field textarea:focus,.dialog-options select:focus{border-color:#3b82f6}.dialog-options{padding:0 10px 10px;display:flex;align-items:center;gap:8px}.dialog-buttons{padding:8px 10px;background-color:#242424;border-top:1px solid var(--border-dark);display:flex;justify-content:flex-end;gap:8px}.std-btn{background-color:#333;color:var(--text-main);border:1px solid #444444;padding:4px 12px;border-radius:3px;cursor:pointer;font-size:11.5px;font-weight:500}.std-btn:hover{background-color:#3d3d3d}.std-btn.primary{background-color:#2563eb;border-color:#1d4ed8;color:#fff}.std-btn.primary:hover{background-color:#1d4ed8}.dialog-body{padding:12px;display:flex;flex-direction:column;gap:8px}.dialog-desc{font-size:11.5px;color:var(--text-dim)}.token-copy-box{display:flex;gap:6px}.token-copy-box input{flex:1;font-family:var(--font-mono);font-size:11px}.dialog-note{font-size:11px;color:var(--text-muted)}.about-box{align-items:center;text-align:center;padding:18px 12px}.about-logo{width:44px;height:44px;margin-bottom:8px}.about-box h3{font-size:13px;margin-bottom:4px}</style>
+    <td class="col-size mono">${o}</td>
+    <td class="col-status">
+      <div class="status-cell">
+        <span class="status-label ${s}">${n}</span>
+        ${b}
+      </div>
+    </td>
+    <td class="col-speed mono">${a}</td>
+    <td class="col-eta mono">${c}</td>
+    <td class="col-date mono">${d}</td>
+  `}function Ae(e){const t=e.total_size?Math.min(100,e.downloaded_bytes/e.total_size*100):0;return`
+    <div class="inline-progress">
+      <div class="progress-track ${e.status==="Paused"?"paused":""}" style="width:${t}%"></div>
+    </div>
+  `}function C(){if(!l){p.classList.add("disabled"),m.classList.add("disabled"),y.classList.add("disabled");return}const e=u.get(l);if(!e){p.classList.add("disabled"),m.classList.add("disabled"),y.classList.add("disabled");return}y.classList.remove("disabled"),e.status==="Downloading"?(p.classList.add("disabled"),m.classList.remove("disabled")):e.status==="Paused"?(p.classList.remove("disabled"),m.classList.add("disabled")):(p.classList.add("disabled"),m.classList.add("disabled"))}function F(){let e=0;for(const t of u.values())t.status==="Downloading"&&t.speed_bytes_per_sec&&(e+=t.speed_bytes_per_sec);fe.textContent=e>0?`${w(e)}/s`:"0.0 KB/s"}function Se(e){const t=(e?.split(".").pop()||"").toLowerCase();return["mp4","mkv","avi","mov","webm"].includes(t)?"film":["mp3","wav","flac","aac"].includes(t)?"music":["zip","rar","7z","tar","gz","iso"].includes(t)?"archive":["pdf","doc","docx","txt","epub"].includes(t)?"file-text":["exe","msi","bin"].includes(t)?"binary":"file"}function w(e){if(e<=0)return"0 B";const t=1024,o=["B","KB","MB","GB","TB"],n=Math.floor(Math.log(e)/Math.log(t));return parseFloat((e/Math.pow(t,n)).toFixed(1))+" "+o[n]}function ke(e){if(e<=0)return"0s";if(e<60)return`${e}s`;const t=Math.floor(e/60),o=e%60;return t<60?`${t}m ${o}s`:`${Math.floor(t/60)}h ${t%60}m`}function $e(e){const t=e?new Date(e*1e3):new Date,n=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][t.getMonth()],s=t.getDate(),a=String(t.getHours()).padStart(2,"0"),c=String(t.getMinutes()).padStart(2,"0");return`${n} ${s} ${a}:${c}`}function z(e){return e?e.replace(/[&<>"']/g,t=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[t]||t):""}window.addEventListener("DOMContentLoaded",Me);</script>
+  <style rel="stylesheet" crossorigin>:root{--bg-app: #0b0c0e;--bg-surface: #111215;--bg-panel: #16171b;--bg-subtle: #1c1d23;--bg-hover: #22242b;--bg-selected: #242731;--bg-input: #141518;--border-subtle: #1f2127;--border-medium: #2a2c35;--border-focus: #4b4f5d;--text-main: #f0f1f3;--text-secondary: #8e929d;--text-muted: #555864;--accent-white: #f5f5f7;--accent-blue: #38bdf8;--status-complete: #34d399;--status-active: #38bdf8;--status-paused: #fbbf24;--status-error: #f87171;--font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;--font-mono: ui-monospace, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;--radius-xs: 4px;--radius-sm: 6px;--radius-md: 8px}*{box-sizing:border-box;margin:0;padding:0}body{font-family:var(--font-sans);background-color:var(--bg-app);color:var(--text-main);height:100vh;overflow:hidden;user-select:none;font-size:12.5px;line-height:1.4;-webkit-font-smoothing:antialiased}#app{display:flex;flex-direction:column;height:100%}.toolbar{display:flex;align-items:center;height:44px;padding:0 14px;background-color:var(--bg-surface);border-bottom:1px solid var(--border-subtle);flex-shrink:0;gap:10px}.toolbar-brand{display:flex;align-items:center;gap:8px}.app-logo{width:20px;height:20px;object-fit:contain}.app-name{font-size:13px;font-weight:700;letter-spacing:.5px;color:var(--text-main)}.toolbar-divider{width:1px;height:18px;background-color:var(--border-medium);margin:0 4px}.toolbar-actions{display:flex;align-items:center;gap:6px}.action-btn{background-color:transparent;border:1px solid transparent;color:var(--text-secondary);font-size:12px;font-weight:500;padding:4px 10px;border-radius:var(--radius-xs);display:flex;align-items:center;gap:6px;cursor:pointer;transition:all .1s ease}.action-btn:hover{background-color:var(--bg-hover);color:var(--text-main);border-color:var(--border-subtle)}.action-btn svg{width:14px;height:14px;stroke-width:2}.action-btn.primary{background-color:var(--bg-subtle);border-color:var(--border-medium);color:var(--text-main)}.action-btn.primary:hover{background-color:var(--bg-hover);border-color:var(--border-focus)}.action-btn.disabled{opacity:.35;cursor:default;pointer-events:none}.action-btn.delete:hover{background-color:#f871711f;color:var(--status-error);border-color:#f8717140}.toolbar-spacer{flex:1}.toolbar-right{display:flex;align-items:center;gap:8px}.speed-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;background-color:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:var(--radius-xs);font-size:11.5px;font-family:var(--font-mono);color:var(--accent-blue);font-variant-numeric:tabular-nums}.speed-badge svg{width:13px;height:13px;color:var(--text-secondary)}.icon-btn{background:transparent;border:1px solid transparent;color:var(--text-muted);width:28px;height:28px;border-radius:var(--radius-xs);display:flex;align-items:center;justify-content:center;cursor:pointer}.icon-btn:hover{background-color:var(--bg-hover);color:var(--text-main);border-color:var(--border-subtle)}.icon-btn svg{width:15px;height:15px}.workspace{display:flex;flex:1;overflow:hidden}.sidebar{width:190px;background-color:var(--bg-surface);border-right:1px solid var(--border-subtle);padding:12px 8px;display:flex;flex-direction:column;gap:16px;flex-shrink:0;overflow-y:auto}.nav-section{display:flex;flex-direction:column;gap:3px}.nav-header{font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--text-muted);padding:0 8px 4px}.nav-list{list-style:none;display:flex;flex-direction:column;gap:1px}.nav-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--radius-xs);font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .1s ease}.nav-item:hover{background-color:var(--bg-hover);color:var(--text-main)}.nav-item.active{background-color:var(--bg-selected);color:var(--text-main);font-weight:600}.nav-item svg{width:14px;height:14px;stroke-width:1.75;color:var(--text-muted)}.nav-item.active svg{color:var(--text-main)}.nav-count{margin-left:auto;font-size:10px;font-family:var(--font-mono);color:var(--text-muted)}.main-content{flex:1;background-color:var(--bg-app);display:flex;flex-direction:column;overflow:hidden}.table-wrap{flex:1;overflow-y:auto;position:relative}.data-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}.data-table thead{position:sticky;top:0;background-color:var(--bg-surface);border-bottom:1px solid var(--border-subtle);z-index:5}.data-table th{padding:6px 12px;font-size:10.5px;font-weight:600;letter-spacing:.5px;color:var(--text-muted);text-align:left;white-space:nowrap}.col-name{width:42%}.col-size{width:11%;text-align:right}.col-status{width:17%}.col-speed{width:12%;text-align:right}.col-eta{width:9%;text-align:right}.col-date{width:100px;text-align:right}.data-row{cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);height:32px}.data-row:hover{background-color:var(--bg-hover)}.data-row.selected{background-color:var(--bg-selected)!important}.data-table td{padding:4px 12px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cell-file{display:flex;align-items:center;gap:8px;overflow:hidden}.cell-file svg{width:14px;height:14px;stroke-width:1.75;color:var(--text-secondary);flex-shrink:0}.file-text{font-size:12px;font-weight:500;color:var(--text-main);overflow:hidden;text-overflow:ellipsis}.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--text-secondary)}.status-cell{display:flex;flex-direction:column;gap:3px;justify-content:center}.status-label{font-size:11.5px;font-weight:500}.status-label.complete{color:var(--status-complete)}.status-label.downloading{color:var(--status-active)}.status-label.paused{color:var(--status-paused)}.status-label.failed{color:var(--status-error)}.inline-progress{display:flex;height:2px;background-color:var(--border-medium);border-radius:1px;overflow:hidden;gap:1px;width:100%}.progress-track{height:100%;background-color:var(--accent-blue)}.progress-track.paused{background-color:var(--status-paused)}.empty-view{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:var(--text-muted);gap:6px;text-align:center}.empty-icon{width:28px;height:28px;stroke-width:1.5;margin-bottom:4px}.empty-text{font-size:13px;font-weight:500;color:var(--text-secondary)}.empty-sub{font-size:11.5px}.footer{display:flex;align-items:center;justify-content:space-between;height:24px;padding:0 14px;background-color:var(--bg-surface);border-top:1px solid var(--border-subtle);font-size:11px;color:var(--text-muted);flex-shrink:0}.connection-status{display:flex;align-items:center;gap:5px}.connection-status .dot{width:5px;height:5px;border-radius:50%;background-color:var(--status-complete)}.modal-backdrop{position:fixed;inset:0;background-color:#000000a6;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;z-index:100}.modal-backdrop.open{opacity:1;pointer-events:auto}.modal-box{background-color:var(--bg-panel);border:1px solid var(--border-medium);border-radius:var(--radius-md);width:440px;max-width:90%;padding:16px;display:flex;flex-direction:column;gap:12px}.modal-titlebar{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;padding-bottom:8px;border-bottom:1px solid var(--border-subtle)}.btn-close{background:transparent;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;line-height:1}.btn-close:hover{color:var(--text-main)}.form-row{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}.form-grid{display:flex;gap:10px}.form-grid .form-row{flex:1}label{font-size:11px;font-weight:500;color:var(--text-secondary)}input,select,textarea{background-color:var(--bg-input);border:1px solid var(--border-medium);border-radius:var(--radius-xs);padding:6px 10px;color:var(--text-main);font-size:12px;font-family:inherit;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--border-focus)}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}.modal-actions.center{justify-content:center}.btn-primary{background-color:var(--text-main);color:#0b0c0e;border:none;font-weight:600;font-size:12px;padding:5px 12px;border-radius:var(--radius-xs);cursor:pointer}.btn-primary:hover{background-color:#fff}.btn-secondary{background-color:var(--bg-subtle);color:var(--text-main);border:1px solid var(--border-medium);font-size:12px;padding:5px 12px;border-radius:var(--radius-xs);cursor:pointer}.btn-secondary:hover{background-color:var(--bg-hover);border-color:var(--border-focus)}.modal-body{display:flex;flex-direction:column;gap:10px}.modal-desc{font-size:12px;color:var(--text-secondary);line-height:1.4}.token-container{display:flex;gap:6px}.token-container input{flex:1;font-family:var(--font-mono);font-size:11px}.modal-note{font-size:11px;color:var(--text-muted)}.modal-note code{font-family:var(--font-mono);color:var(--text-secondary)}.about-dialog{width:360px}.about-icon{width:44px;height:44px;margin-bottom:6px}.about-title{font-size:13.5px;font-weight:700;margin-bottom:4px}.about-desc{font-size:12px;color:var(--text-secondary);margin-bottom:2px}.about-meta{font-size:11px;color:var(--text-muted)}.text-center{align-items:center;text-align:center}</style>
 </head>
 <body>
   <div id="app">
-    <!-- Top Action Toolbar -->
+    <!-- Sleek Minimalist Top Toolbar -->
     <header class="toolbar">
-      <div class="toolbar-left">
-        <button class="tool-btn" id="btn-new-url" title="Add New Download">
-          <div class="tool-icon btn-blue">
-            <i data-lucide="plus"></i>
-          </div>
-          <span class="tool-label">New URL</span>
+      <div class="toolbar-brand">
+        <img src="./logo.png" alt="Swarm" class="app-logo" />
+        <span class="app-name">Swarm</span>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <div class="toolbar-actions">
+        <button class="action-btn primary" id="btn-new-url" title="Add Download URL">
+          <i data-lucide="plus"></i>
+          <span>Add URL</span>
         </button>
 
-        <button class="tool-btn disabled" id="btn-resume" title="Resume selected download">
-          <div class="tool-icon btn-blue">
-            <i data-lucide="play"></i>
-          </div>
-          <span class="tool-label">Resume</span>
+        <button class="action-btn disabled" id="btn-resume" title="Resume Selected Download">
+          <i data-lucide="play"></i>
+          <span>Resume</span>
         </button>
 
-        <button class="tool-btn disabled" id="btn-stop" title="Stop selected download">
-          <div class="tool-icon btn-blue">
-            <i data-lucide="square"></i>
-          </div>
-          <span class="tool-label">Stop</span>
+        <button class="action-btn disabled" id="btn-stop" title="Pause Selected Download">
+          <i data-lucide="pause"></i>
+          <span>Pause</span>
         </button>
 
-        <button class="tool-btn disabled" id="btn-delete" title="Delete selected download">
-          <div class="tool-icon btn-red">
-            <i data-lucide="x"></i>
-          </div>
-          <span class="tool-label">Delete</span>
+        <button class="action-btn delete disabled" id="btn-delete" title="Delete Selected Download">
+          <i data-lucide="trash-2"></i>
+          <span>Delete</span>
         </button>
       </div>
 
+      <div class="toolbar-spacer"></div>
+
       <div class="toolbar-right">
-        <button class="tool-btn" id="btn-settings" title="Settings">
-          <div class="tool-icon btn-icon-only">
-            <i data-lucide="settings"></i>
-          </div>
-          <span class="tool-label">Settings</span>
+        <div class="speed-badge" title="Total Realtime Throughput">
+          <i data-lucide="activity"></i>
+          <span id="global-speed">0.0 KB/s</span>
+        </div>
+
+        <button class="icon-btn" id="btn-browsers" title="Browser Integration & Extension">
+          <i data-lucide="globe"></i>
         </button>
 
-        <button class="tool-btn" id="btn-browsers" title="Browser Integration & Extension">
-          <div class="tool-icon btn-icon-only">
-            <i data-lucide="globe"></i>
-          </div>
-          <span class="tool-label">Browsers</span>
+        <button class="icon-btn" id="btn-settings" title="Settings">
+          <i data-lucide="settings"></i>
         </button>
 
-        <button class="tool-btn" id="btn-about" title="About Swarm">
-          <div class="tool-icon btn-icon-only">
-            <i data-lucide="info"></i>
-          </div>
-          <span class="tool-label">About</span>
-        </button>
-
-        <button class="tool-btn" id="btn-quit" title="Exit to Tray / Close App">
-          <div class="tool-icon btn-red">
-            <i data-lucide="power"></i>
-          </div>
-          <span class="tool-label">Quit</span>
+        <button class="icon-btn" id="btn-about" title="About Swarm">
+          <i data-lucide="info"></i>
         </button>
       </div>
     </header>
 
-    <!-- Workspace Split View -->
+    <!-- Two-Pane Layout -->
     <div class="workspace">
-      <!-- Left Category Sidebar -->
+      <!-- Minimal Sidebar -->
       <aside class="sidebar">
-        <ul class="tree-menu">
-          <li class="tree-item active" data-category="all">
-            <div class="tree-row">
-              <i data-lucide="folder" class="tree-icon"></i>
-              <span class="tree-label">All Downloads</span>
-            </div>
-            <ul class="tree-sub">
-              <li class="tree-sub-item" data-category="video">
-                <i data-lucide="film" class="tree-icon"></i>
-                <span>Video</span>
-              </li>
-              <li class="tree-sub-item" data-category="audio">
-                <i data-lucide="music" class="tree-icon"></i>
-                <span>Audio</span>
-              </li>
-              <li class="tree-sub-item" data-category="compressed">
-                <i data-lucide="archive" class="tree-icon"></i>
-                <span>Compressed</span>
-              </li>
-              <li class="tree-sub-item" data-category="document">
-                <i data-lucide="file-text" class="tree-icon"></i>
-                <span>Document</span>
-              </li>
-              <li class="tree-sub-item" data-category="application">
-                <i data-lucide="binary" class="tree-icon"></i>
-                <span>Application</span>
-              </li>
-              <li class="tree-sub-item" data-category="misc">
-                <i data-lucide="file" class="tree-icon"></i>
-                <span>Misc</span>
-              </li>
-            </ul>
-          </li>
-          <li class="tree-item" data-category="complete">
-            <div class="tree-row">
-              <i data-lucide="folder-check" class="tree-icon"></i>
-              <span class="tree-label">Complete</span>
-            </div>
-          </li>
-          <li class="tree-item" data-category="incomplete">
-            <div class="tree-row">
-              <i data-lucide="folder-down" class="tree-icon"></i>
-              <span class="tree-label">Incomplete</span>
-            </div>
-          </li>
-        </ul>
+        <div class="nav-section">
+          <span class="nav-header">QUEUE</span>
+          <ul class="nav-list">
+            <li class="nav-item active" data-category="all">
+              <i data-lucide="inbox"></i>
+              <span>All Downloads</span>
+              <span class="nav-count" id="count-all">0</span>
+            </li>
+            <li class="nav-item" data-category="incomplete">
+              <i data-lucide="arrow-down-circle"></i>
+              <span>Active</span>
+              <span class="nav-count" id="count-active">0</span>
+            </li>
+            <li class="nav-item" data-category="complete">
+              <i data-lucide="check-circle-2"></i>
+              <span>Completed</span>
+              <span class="nav-count" id="count-complete">0</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-header">CATEGORIES</span>
+          <ul class="nav-list">
+            <li class="nav-item" data-category="video">
+              <i data-lucide="film"></i>
+              <span>Video</span>
+            </li>
+            <li class="nav-item" data-category="audio">
+              <i data-lucide="music"></i>
+              <span>Audio</span>
+            </li>
+            <li class="nav-item" data-category="compressed">
+              <i data-lucide="archive"></i>
+              <span>Compressed</span>
+            </li>
+            <li class="nav-item" data-category="document">
+              <i data-lucide="file-text"></i>
+              <span>Documents</span>
+            </li>
+            <li class="nav-item" data-category="application">
+              <i data-lucide="binary"></i>
+              <span>Applications</span>
+            </li>
+            <li class="nav-item" data-category="misc">
+              <i data-lucide="file"></i>
+              <span>Other</span>
+            </li>
+          </ul>
+        </div>
       </aside>
 
-      <!-- Right Main Table Area -->
-      <section class="main-table-pane">
-        <div class="table-container">
-          <table class="download-table" id="download-table">
+      <!-- Main Data Table -->
+      <main class="main-content">
+        <div class="table-wrap">
+          <table class="data-table">
             <thead>
               <tr>
-                <th class="col-filename">File Name</th>
-                <th class="col-size">Size</th>
-                <th class="col-status">Status</th>
-                <th class="col-speed">Bandwidth</th>
-                <th class="col-eta">Remaining Time</th>
-                <th class="col-date">Date Added</th>
+                <th class="col-name">NAME</th>
+                <th class="col-size">SIZE</th>
+                <th class="col-status">STATUS</th>
+                <th class="col-speed">SPEED</th>
+                <th class="col-eta">ETA</th>
+                <th class="col-date">DATE</th>
               </tr>
             </thead>
             <tbody id="table-body">
-              <!-- Rows rendered by app.ts -->
+              <!-- Dynamically populated rows -->
             </tbody>
           </table>
+
+          <div class="empty-view" id="empty-state">
+            <i data-lucide="arrow-down" class="empty-icon"></i>
+            <span class="empty-text">No downloads in this view</span>
+            <span class="empty-sub">Click "Add URL" or download files via browser extension</span>
+          </div>
         </div>
-      </section>
+      </main>
     </div>
 
-    <!-- Status Bar -->
-    <footer class="statusbar">
-      <div class="status-left">
-        <span id="status-summary">0 downloads</span>
+    <!-- Minimal Status Footer -->
+    <footer class="footer">
+      <div class="footer-left">
+        <span id="footer-count">0 items</span>
       </div>
-      <div class="status-right">
-        <span id="status-speed">0.0 KB/s</span>
+      <div class="footer-right">
+        <div class="connection-status" id="conn-status" title="Daemon connection status">
+          <span class="dot"></span>
+          <span>Online</span>
+        </div>
       </div>
     </footer>
 
-    <!-- Modal: New URL -->
-    <div class="modal-layer" id="modal-url">
-      <div class="compact-dialog">
-        <div class="dialog-titlebar">
-          <span>New Download URL</span>
-          <button class="dialog-x" id="btn-close-url-dialog">&times;</button>
+    <!-- Modal: Add URL -->
+    <div class="modal-backdrop" id="modal-url">
+      <div class="modal-box">
+        <div class="modal-titlebar">
+          <span>Add New Download</span>
+          <button class="btn-close" id="btn-close-url-dialog">&times;</button>
         </div>
         <form id="form-new-url">
-          <div class="dialog-field">
-            <label for="input-url">URL:</label>
+          <div class="form-row">
+            <label for="input-url">Download URL</label>
             <textarea id="input-url" rows="3" placeholder="https://..." required></textarea>
           </div>
-          <div class="dialog-options">
-            <label for="select-sockets">Sockets:</label>
-            <select id="select-sockets">
-              <option value="4">4 connections</option>
-              <option value="8" selected>8 connections</option>
-              <option value="12">12 connections</option>
-              <option value="16">16 connections</option>
-            </select>
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="select-sockets">Sockets</label>
+              <select id="select-sockets">
+                <option value="4">4 connections</option>
+                <option value="8" selected>8 connections (default)</option>
+                <option value="12">12 connections</option>
+                <option value="16">16 connections</option>
+              </select>
+            </div>
           </div>
-          <div class="dialog-buttons">
-            <button type="submit" class="std-btn primary">Download Now</button>
-            <button type="button" class="std-btn" id="btn-cancel-url">Cancel</button>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="btn-cancel-url">Cancel</button>
+            <button type="submit" class="btn-primary">Start Download</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Modal: Browsers / Extension Pairing -->
-    <div class="modal-layer" id="modal-browsers">
-      <div class="compact-dialog">
-        <div class="dialog-titlebar">
+    <!-- Modal: Browser Extension -->
+    <div class="modal-backdrop" id="modal-browsers">
+      <div class="modal-box">
+        <div class="modal-titlebar">
           <span>Browser Integration</span>
-          <button class="dialog-x" id="btn-close-browsers-dialog">&times;</button>
+          <button class="btn-close" id="btn-close-browsers-dialog">&times;</button>
         </div>
-        <div class="dialog-body">
-          <p class="dialog-desc">Install the Swarm extension in your browser, then pair it using this token:</p>
-          <div class="token-copy-box">
+        <div class="modal-body">
+          <p class="modal-desc">
+            Load the unpacked extension from the <code>extension</code> folder in Chrome/Edge, then pair using this token:
+          </p>
+          <div class="token-container">
             <input type="text" id="token-input" readonly value="" />
-            <button type="button" class="std-btn" id="btn-copy-token">Copy</button>
+            <button type="button" class="btn-secondary" id="btn-copy-token">Copy</button>
           </div>
-          <p class="dialog-note">Daemon listening on port <strong id="active-port">52417</strong></p>
-          <div class="dialog-buttons">
-            <button type="button" class="std-btn primary" id="btn-close-browsers">Close</button>
+          <p class="modal-note">Daemon active on <code>127.0.0.1:<span id="active-port">52417</span></code></p>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="btn-close-browsers">Close</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Modal: About -->
-    <div class="modal-layer" id="modal-about">
-      <div class="compact-dialog">
-        <div class="dialog-titlebar">
+    <div class="modal-backdrop" id="modal-about">
+      <div class="modal-box about-dialog">
+        <div class="modal-titlebar">
           <span>About Swarm</span>
-          <button class="dialog-x" id="btn-close-about-dialog">&times;</button>
+          <button class="btn-close" id="btn-close-about-dialog">&times;</button>
         </div>
-        <div class="dialog-body about-box">
-          <img src="./logo.png" alt="Swarm Logo" class="about-logo" />
-          <h3>Swarm Download Manager 0.1.0</h3>
-          <p>Ultra-low memory Rust download manager for Windows.</p>
-          <p class="dialog-note">Target memory: &lt; 5MB &middot; Multi-socket range downloads &middot; Windows Native Integration</p>
-          <div class="dialog-buttons">
-            <button type="button" class="std-btn primary" id="btn-close-about">OK</button>
+        <div class="modal-body text-center">
+          <img src="./logo.png" alt="Swarm Logo" class="about-icon" />
+          <h3 class="about-title">Swarm Download Manager</h3>
+          <p class="about-desc">Modern minimalist high-performance segmented downloader for Windows.</p>
+          <p class="about-meta">Rust Native Daemon &middot; Win32 Tray &middot; RAM &lt; 5MB</p>
+          <div class="modal-actions center">
+            <button type="button" class="btn-secondary" id="btn-close-about">OK</button>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 
 </body>

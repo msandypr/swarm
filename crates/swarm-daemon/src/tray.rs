@@ -198,13 +198,31 @@ pub fn open_ui(url: &str) {
         r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
     ];
 
+    let width = 880;
+    let height = 520;
+    let screen_w = unsafe { windows_sys::Win32::UI::WindowsAndMessaging::GetSystemMetrics(0) };
+    let screen_h = unsafe { windows_sys::Win32::UI::WindowsAndMessaging::GetSystemMetrics(1) };
+    let pos_x = if screen_w > width { (screen_w - width) / 2 } else { 50 };
+    let pos_y = if screen_h > height { (screen_h - height) / 2 } else { 50 };
+
+    let size_arg = format!("--window-size={},{}", width, height);
+    let pos_arg = format!("--window-position={},{}", pos_x, pos_y);
+
+    let profile_dir = if let Ok(local_app_data) = std::env::var("LOCALAPPDATA") {
+        format!(r"--user-data-dir={}\Swarm\ui-profile", local_app_data)
+    } else {
+        r"--user-data-dir=swarm_ui_profile".to_string()
+    };
+
     let mut launched = false;
     for path in &edge_paths {
         if std::path::Path::new(path).exists() {
             let app_arg = format!("--app={}", url);
             let _ = std::process::Command::new(path)
                 .arg(app_arg)
-                .arg("--window-size=920,530")
+                .arg(&size_arg)
+                .arg(&pos_arg)
+                .arg(&profile_dir)
                 .spawn();
             launched = true;
             break;
