@@ -261,6 +261,36 @@ pub fn open_folder_in_explorer(path: &str) {
     }
 }
 
+pub fn open_browser_extensions_page(browser: &str) -> bool {
+    let (exe_paths, url) = match browser {
+        "chrome" => (
+            vec![
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            ],
+            "chrome://extensions",
+        ),
+        _ => (
+            vec![
+                r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+            ],
+            "edge://extensions",
+        ),
+    };
+
+    for path in exe_paths {
+        if std::path::Path::new(path).exists() {
+            let res = std::process::Command::new(path).arg(url).spawn();
+            if res.is_ok() {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
 pub fn launch_browser_with_extension(browser: &str) -> bool {
     let mut ext_dir = std::path::PathBuf::from("extension");
     if !ext_dir.exists() {

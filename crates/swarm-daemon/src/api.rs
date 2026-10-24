@@ -41,6 +41,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/downloads", get(handle_list_downloads).post(handle_add_download))
         .route("/ext/add", post(handle_ext_add))
         .route("/ext/open-folder", post(handle_open_extension_folder))
+        .route("/ext/open-browser-extensions", post(handle_open_browser_extensions))
         .route("/ext/launch-browser", post(handle_launch_browser))
         .route("/downloads/:id", patch(handle_action).delete(handle_delete))
         .route("/events", get(handle_events))
@@ -52,6 +53,7 @@ pub fn create_router(state: AppState) -> Router {
     Router::new()
         .route("/", get(handle_root))
         .route("/logo.png", get(handle_logo))
+        .route("/icon-128.png", get(handle_icon_128))
         .route("/favicon.png", get(handle_favicon))
         .nest("/api", api_routes)
         .layer(cors)
@@ -90,6 +92,7 @@ async fn auth_token_middleware(
 
 static INDEX_HTML: &[u8] = include_bytes!("../../../web/dist/index.html");
 static LOGO_PNG: &[u8] = include_bytes!("../../../static/logo.png");
+static ICON_128_PNG: &[u8] = include_bytes!("../../../static/icon-128.png");
 static FAVICON_PNG: &[u8] = include_bytes!("../../../static/icon-32.png");
 
 async fn handle_root() -> impl IntoResponse {
@@ -103,6 +106,13 @@ async fn handle_logo() -> impl IntoResponse {
     (
         [(header::CONTENT_TYPE, "image/png")],
         LOGO_PNG,
+    )
+}
+
+async fn handle_icon_128() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "image/png")],
+        ICON_128_PNG,
     )
 }
 
@@ -164,6 +174,19 @@ async fn handle_launch_browser(
 ) -> impl IntoResponse {
     let browser = payload.browser.unwrap_or_else(|| "edge".to_string());
     let ok = crate::tray::launch_browser_with_extension(&browser);
+    Json(serde_json::json!({ "success": ok }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OpenBrowserPageRequest {
+    pub browser: Option<String>,
+}
+
+async fn handle_open_browser_extensions(
+    Json(payload): Json<OpenBrowserPageRequest>,
+) -> impl IntoResponse {
+    let browser = payload.browser.unwrap_or_else(|| "edge".to_string());
+    let ok = crate::tray::open_browser_extensions_page(&browser);
     Json(serde_json::json!({ "success": ok }))
 }
 

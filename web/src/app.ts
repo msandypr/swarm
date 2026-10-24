@@ -134,14 +134,15 @@ function setupEventListeners() {
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-      const res = await fetch('/api/ext/launch-browser', {
+      // Open Edge extensions page directly via OS
+      await fetch('/api/ext/open-browser-extensions', {
         method: 'POST',
         headers,
         body: JSON.stringify({ browser: 'edge' }),
       });
-      if (res.ok) {
-        modalBrowsers?.classList.remove('open');
-      }
+      // Also open extension folder beside it
+      await fetch('/api/ext/open-folder', { method: 'POST', headers });
+      modalBrowsers?.classList.remove('open');
     } catch (err) {
       console.error('Launch Edge error:', err);
     }
@@ -151,14 +152,15 @@ function setupEventListeners() {
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-      const res = await fetch('/api/ext/launch-browser', {
+      // Open Chrome extensions page directly via OS
+      await fetch('/api/ext/open-browser-extensions', {
         method: 'POST',
         headers,
         body: JSON.stringify({ browser: 'chrome' }),
       });
-      if (res.ok) {
-        modalBrowsers?.classList.remove('open');
-      }
+      // Also open extension folder beside it
+      await fetch('/api/ext/open-folder', { method: 'POST', headers });
+      modalBrowsers?.classList.remove('open');
     } catch (err) {
       console.error('Launch Chrome error:', err);
     }
@@ -173,12 +175,17 @@ function setupEventListeners() {
     }
   });
 
-  document.getElementById('btn-open-browser-page')?.addEventListener('click', () => {
-    // Open browser extensions page
+  document.getElementById('btn-open-browser-page')?.addEventListener('click', async () => {
     try {
-      window.open('chrome://extensions', '_blank');
-    } catch {
-      // ignore
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+      await fetch('/api/ext/open-browser-extensions', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ browser: 'edge' }),
+      });
+    } catch (err) {
+      console.error('Failed to open browser page:', err);
     }
   });
 

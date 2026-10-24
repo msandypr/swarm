@@ -75,8 +75,8 @@ body {
 }
 
 .app-logo {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -270,10 +270,10 @@ body {
 }
 
 .nav-item svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 1.75;
-  color: var(--text-muted);
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+  color: var(--text-secondary);
 }
 
 .nav-item.active svg {
@@ -364,9 +364,9 @@ body {
 }
 
 .cell-file svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 1.75;
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
   color: var(--text-secondary);
   flex-shrink: 0;
 }
@@ -648,9 +648,9 @@ input:focus, select:focus, textarea:focus {
 }
 
 .about-icon {
-  width: 44px;
-  height: 44px;
-  margin-bottom: 6px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 8px;
 }
 
 .about-title {
