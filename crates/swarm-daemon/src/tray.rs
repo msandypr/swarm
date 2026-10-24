@@ -30,6 +30,15 @@ const IDM_EXIT: usize = 1004;
 static ALL_PAUSED: AtomicBool = AtomicBool::new(false);
 static mut TASKBAR_CREATED_MSG: u32 = 0;
 static mut GLOBAL_HWND: HWND = null_mut();
+static UI_URL: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
+pub fn set_ui_url(url: String) {
+    let _ = UI_URL.set(url);
+}
+
+pub fn get_ui_url() -> &'static str {
+    UI_URL.get().map(|s| s.as_str()).unwrap_or("http://127.0.0.1:52417/")
+}
 
 fn to_wide(s: &str) -> Vec<u16> {
     let mut v: Vec<u16> = s.encode_utf16().collect();
@@ -226,7 +235,7 @@ unsafe extern "system" fn tray_window_proc(
             let lparam_msg = (lparam & 0xFFFF) as u32;
             match lparam_msg {
                 WM_LBUTTONUP | WM_LBUTTONDBLCLK => {
-                    open_ui("http://127.0.0.1:52417/");
+                    open_ui(get_ui_url());
                 }
                 WM_RBUTTONUP => {
                     show_tray_menu(hwnd);
@@ -239,7 +248,7 @@ unsafe extern "system" fn tray_window_proc(
             let id = (wparam & 0xFFFF) as usize;
             match id {
                 IDM_OPEN => {
-                    open_ui("http://127.0.0.1:52417/");
+                    open_ui(get_ui_url());
                 }
                 IDM_PAUSE_RESUME_ALL => {
                     let paused = ALL_PAUSED.fetch_xor(true, Ordering::SeqCst);
@@ -257,7 +266,7 @@ unsafe extern "system" fn tray_window_proc(
             0
         }
         WM_SWARM_OPEN_UI => {
-            open_ui("http://127.0.0.1:52417/");
+            open_ui(get_ui_url());
             0
         }
         WM_SWARM_EXIT => {
