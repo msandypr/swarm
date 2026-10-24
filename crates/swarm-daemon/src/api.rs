@@ -41,6 +41,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/downloads", get(handle_list_downloads).post(handle_add_download))
         .route("/ext/add", post(handle_ext_add))
         .route("/ext/open-folder", post(handle_open_extension_folder))
+        .route("/ext/launch-browser", post(handle_launch_browser))
         .route("/downloads/:id", patch(handle_action).delete(handle_delete))
         .route("/events", get(handle_events))
         .layer(middleware::from_fn_with_state(
@@ -151,6 +152,19 @@ async fn handle_open_extension_folder() -> impl IntoResponse {
     }
 
     Json(serde_json::json!({ "success": false, "error": "Folder not found" }))
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LaunchBrowserRequest {
+    pub browser: Option<String>,
+}
+
+async fn handle_launch_browser(
+    Json(payload): Json<LaunchBrowserRequest>,
+) -> impl IntoResponse {
+    let browser = payload.browser.unwrap_or_else(|| "edge".to_string());
+    let ok = crate::tray::launch_browser_with_extension(&browser);
+    Json(serde_json::json!({ "success": ok }))
 }
 
 async fn handle_list_downloads(State(state): State<AppState>) -> impl IntoResponse {

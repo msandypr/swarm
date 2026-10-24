@@ -214,33 +214,72 @@
 
     <!-- Modal: Browser Extension -->
     <div class="modal-backdrop" id="modal-browsers">
-      <div class="modal-box">
-          <span>Browser Integration</span>
+      <div class="modal-box browser-dialog">
+        <div class="modal-titlebar">
+          <span>Browser Extension</span>
           <button class="btn-close" id="btn-close-browsers-dialog">&times;</button>
         </div>
         <div class="modal-body">
           <p class="modal-desc">
-            Capture downloads directly from your browser with the Swarm companion extension.
+            Swarm captures downloads automatically. Choose your browser to connect:
           </p>
-          <div class="ext-action-row">
-            <button type="button" class="btn-primary" id="btn-open-ext-folder">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <span>Open Extension Folder</span>
-            </button>
-            <button type="button" class="btn-secondary" id="btn-open-browser-page">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
-              <span>Open Browser Extensions</span>
+
+          <!-- 1-Click Launch Edge Card -->
+          <div class="browser-card">
+            <div class="browser-info">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <div>
+                <span class="browser-name">Microsoft Edge</span>
+                <span class="browser-sub">Default Windows Browser</span>
+              </div>
+            </div>
+            <button type="button" class="btn-primary" id="btn-launch-edge">
+              1-Click Launch
             </button>
           </div>
-          <div class="ext-steps">
-            <div class="step-line"><strong>1.</strong> Turn on <em>Developer mode</em> in your browser.</div>
-            <div class="step-line"><strong>2.</strong> Click <em>Load unpacked</em> and select the opened folder.</div>
+
+          <!-- 1-Click Launch Chrome Card -->
+          <div class="browser-card">
+            <div class="browser-info">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+              <div>
+                <span class="browser-name">Google Chrome / Brave</span>
+                <span class="browser-sub">Chromium Browser</span>
+              </div>
+            </div>
+            <button type="button" class="btn-secondary" id="btn-launch-chrome">
+              1-Click Launch
+            </button>
           </div>
-          <p class="modal-note">Pairs automatically &middot; No setup needed</p>
+
+          <!-- Manual 2-Step Option -->
+          <div class="manual-install-box">
+            <span class="manual-title">Or install manually in 2 steps:</span>
+            <div class="step-list">
+              <div class="step-row">
+                <span class="step-num">1</span>
+                <span>Turn on <em>Developer mode</em> in your browser extensions page.</span>
+              </div>
+              <div class="step-row">
+                <span class="step-num">2</span>
+                <span>Click <em>Load unpacked</em> and choose the opened Swarm folder.</span>
+              </div>
+            </div>
+            <div class="manual-buttons">
+              <button type="button" class="btn-secondary btn-sm" id="btn-open-ext-folder">
+                Open Extension Folder
+              </button>
+              <button type="button" class="btn-secondary btn-sm" id="btn-open-browser-page">
+                Open Extensions Page
+              </button>
+            </div>
+          </div>
+
           <div class="modal-actions">
             <button type="button" class="btn-secondary" id="btn-close-browsers">Close</button>
           </div>
         </div>
+      </div>
     </div>
 
     <!-- Modal: About -->

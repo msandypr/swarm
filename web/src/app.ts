@@ -130,6 +130,39 @@ function setupEventListeners() {
   document.getElementById('btn-close-browsers')?.addEventListener('click', () => {
     modalBrowsers?.classList.remove('open');
   });
+  document.getElementById('btn-launch-edge')?.addEventListener('click', async () => {
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+      const res = await fetch('/api/ext/launch-browser', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ browser: 'edge' }),
+      });
+      if (res.ok) {
+        modalBrowsers?.classList.remove('open');
+      }
+    } catch (err) {
+      console.error('Launch Edge error:', err);
+    }
+  });
+
+  document.getElementById('btn-launch-chrome')?.addEventListener('click', async () => {
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+      const res = await fetch('/api/ext/launch-browser', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ browser: 'chrome' }),
+      });
+      if (res.ok) {
+        modalBrowsers?.classList.remove('open');
+      }
+    } catch (err) {
+      console.error('Launch Chrome error:', err);
+    }
+  });
   document.getElementById('btn-open-ext-folder')?.addEventListener('click', async () => {
     try {
       const headers: Record<string, string> = {};

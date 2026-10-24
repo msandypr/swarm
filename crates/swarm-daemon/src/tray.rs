@@ -261,6 +261,50 @@ pub fn open_folder_in_explorer(path: &str) {
     }
 }
 
+pub fn launch_browser_with_extension(browser: &str) -> bool {
+    let mut ext_dir = std::path::PathBuf::from("extension");
+    if !ext_dir.exists() {
+        if let Ok(exe_path) = std::env::current_exe() {
+            if let Some(parent) = exe_path.parent() {
+                let candidate = parent.join("extension");
+                if candidate.exists() {
+                    ext_dir = candidate;
+                }
+            }
+        }
+    }
+
+    let ext_path = match ext_dir.canonicalize() {
+        Ok(p) => p.to_string_lossy().to_string(),
+        Err(_) => ext_dir.to_string_lossy().to_string(),
+    };
+
+    let paths: Vec<&str> = match browser {
+        "chrome" => vec![
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        ],
+        _ => vec![
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        ],
+    };
+
+    let load_arg = format!("--load-extension={}", ext_path);
+    for p in paths {
+        if std::path::Path::new(p).exists() {
+            let res = std::process::Command::new(p)
+                .arg(&load_arg)
+                .spawn();
+            if res.is_ok() {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
 /// Opens the user's Downloads folder in Windows Explorer.
 pub fn open_downloads_folder() {
     let download_dir = dirs_downloads_folder();
