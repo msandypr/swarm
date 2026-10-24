@@ -1,24 +1,4 @@
-import {
-  createIcons,
-  Plus,
-  Play,
-  Pause,
-  Trash2,
-  Activity,
-  Globe,
-  Settings,
-  Info,
-  Inbox,
-  ArrowDownCircle,
-  CheckCircle2,
-  Film,
-  Music,
-  Archive,
-  FileText,
-  Binary,
-  File as FileIcon,
-  ArrowDown,
-} from 'lucide';
+// Swarm Download Manager — Studio Minimalist Core
 
 interface SegmentProgress {
   index: number;
@@ -52,98 +32,51 @@ type CategoryType =
   | 'application'
   | 'misc';
 
-// State
+// Global State
 let downloads: Map<string, DownloadItem> = new Map();
 let selectedId: string | null = null;
 let currentCategory: CategoryType = 'all';
 let authToken: string = '';
 let activePort: number = 52417;
 
-// DOM Elements
-const elTableBody = document.getElementById('table-body') as HTMLTableSectionElement;
-const elEmptyState = document.getElementById('empty-state') as HTMLDivElement;
-const elGlobalSpeed = document.getElementById('global-speed') as HTMLSpanElement;
-const elFooterCount = document.getElementById('footer-count') as HTMLSpanElement;
-
-const elCountAll = document.getElementById('count-all') as HTMLSpanElement;
-const elCountActive = document.getElementById('count-active') as HTMLSpanElement;
-const elCountComplete = document.getElementById('count-complete') as HTMLSpanElement;
-
-// Action Buttons
-const btnResume = document.getElementById('btn-resume') as HTMLButtonElement;
-const btnStop = document.getElementById('btn-stop') as HTMLButtonElement;
-const btnDelete = document.getElementById('btn-delete') as HTMLButtonElement;
-
-// Dialogs
-const modalUrl = document.getElementById('modal-url') as HTMLDivElement;
-const formUrl = document.getElementById('form-new-url') as HTMLFormElement;
-const inputUrl = document.getElementById('input-url') as HTMLTextAreaElement;
-const selectSockets = document.getElementById('select-sockets') as HTMLSelectElement;
-
-const modalBrowsers = document.getElementById('modal-browsers') as HTMLDivElement;
-const tokenInput = document.getElementById('token-input') as HTMLInputElement;
-const btnCopyToken = document.getElementById('btn-copy-token') as HTMLButtonElement;
-const activePortEl = document.getElementById('active-port') as HTMLElement;
-
-const modalAbout = document.getElementById('modal-about') as HTMLDivElement;
-
 function init() {
   extractToken();
-  initLucide();
   setupEventListeners();
   fetchInitialData();
   connectEventSource();
 }
 
-function initLucide() {
-  createIcons({
-    icons: {
-      Plus,
-      Play,
-      Pause,
-      Trash2,
-      Activity,
-      Globe,
-      Settings,
-      Info,
-      Inbox,
-      ArrowDownCircle,
-      CheckCircle2,
-      Film,
-      Music,
-      Archive,
-      FileText,
-      Binary,
-      File: FileIcon,
-      ArrowDown,
-    },
-  });
-}
-
 function extractToken() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const tokenParam = urlParams.get('t');
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenParam = urlParams.get('t');
 
-  if (tokenParam) {
-    authToken = tokenParam;
-    localStorage.setItem('swarm_token', tokenParam);
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else {
-    authToken = localStorage.getItem('swarm_token') || '';
+    if (tokenParam) {
+      authToken = tokenParam;
+      localStorage.setItem('swarm_token', tokenParam);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+      authToken = localStorage.getItem('swarm_token') || '';
+    }
+  } catch (err) {
+    console.warn('Error reading token from storage/url:', err);
   }
-
-  tokenInput.value = authToken;
 }
 
 function setupEventListeners() {
-  // New URL
+  const modalUrl = document.getElementById('modal-url') as HTMLElement | null;
+  const formUrl = document.getElementById('form-new-url') as HTMLFormElement | null;
+  const inputUrl = document.getElementById('input-url') as HTMLTextAreaElement | null;
+  const selectSockets = document.getElementById('select-sockets') as HTMLSelectElement | null;
+
+  // New URL Modal
   document.getElementById('btn-new-url')?.addEventListener('click', () => {
-    modalUrl.classList.add('open');
-    inputUrl.focus();
+    modalUrl?.classList.add('open');
+    inputUrl?.focus();
 
     if (navigator.clipboard && navigator.clipboard.readText) {
       navigator.clipboard.readText().then((text) => {
-        if (text && (text.startsWith('http://') || text.startsWith('https://'))) {
+        if (text && inputUrl && (text.startsWith('http://') || text.startsWith('https://'))) {
           inputUrl.value = text;
         }
       }).catch(() => {});
@@ -151,33 +84,34 @@ function setupEventListeners() {
   });
 
   document.getElementById('btn-close-url-dialog')?.addEventListener('click', () => {
-    modalUrl.classList.remove('open');
+    modalUrl?.classList.remove('open');
   });
   document.getElementById('btn-cancel-url')?.addEventListener('click', () => {
-    modalUrl.classList.remove('open');
+    modalUrl?.classList.remove('open');
   });
 
-  formUrl.addEventListener('submit', async (e) => {
+  formUrl?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!inputUrl) return;
     const url = inputUrl.value.trim();
-    const connections = parseInt(selectSockets.value) || 8;
+    const connections = selectSockets ? parseInt(selectSockets.value) || 8 : 8;
     if (!url) return;
 
     await addDownload(url, connections);
-    modalUrl.classList.remove('open');
+    modalUrl?.classList.remove('open');
     inputUrl.value = '';
   });
 
   // Action Buttons
-  btnResume.addEventListener('click', () => {
+  document.getElementById('btn-resume')?.addEventListener('click', () => {
     if (selectedId) triggerAction(selectedId, 'resume');
   });
 
-  btnStop.addEventListener('click', () => {
+  document.getElementById('btn-stop')?.addEventListener('click', () => {
     if (selectedId) triggerAction(selectedId, 'pause');
   });
 
-  btnDelete.addEventListener('click', () => {
+  document.getElementById('btn-delete')?.addEventListener('click', () => {
     if (selectedId) {
       if (confirm('Delete this download?')) {
         deleteDownload(selectedId, true);
@@ -186,33 +120,39 @@ function setupEventListeners() {
   });
 
   // Browsers Dialog
+  const modalBrowsers = document.getElementById('modal-browsers');
   document.getElementById('btn-browsers')?.addEventListener('click', () => {
-    modalBrowsers.classList.add('open');
+    modalBrowsers?.classList.add('open');
   });
   document.getElementById('btn-close-browsers-dialog')?.addEventListener('click', () => {
-    modalBrowsers.classList.remove('open');
+    modalBrowsers?.classList.remove('open');
   });
   document.getElementById('btn-close-browsers')?.addEventListener('click', () => {
-    modalBrowsers.classList.remove('open');
+    modalBrowsers?.classList.remove('open');
   });
 
-  btnCopyToken.addEventListener('click', () => {
-    if (authToken) {
-      navigator.clipboard.writeText(authToken);
-      btnCopyToken.textContent = 'Copied';
-      setTimeout(() => (btnCopyToken.textContent = 'Copy'), 1500);
-    }
+  // Settings Dialog
+  const modalSettings = document.getElementById('modal-settings');
+  document.getElementById('btn-settings')?.addEventListener('click', () => {
+    modalSettings?.classList.add('open');
+  });
+  document.getElementById('btn-close-settings-dialog')?.addEventListener('click', () => {
+    modalSettings?.classList.remove('open');
+  });
+  document.getElementById('btn-close-settings')?.addEventListener('click', () => {
+    modalSettings?.classList.remove('open');
   });
 
   // About Dialog
+  const modalAbout = document.getElementById('modal-about');
   document.getElementById('btn-about')?.addEventListener('click', () => {
-    modalAbout.classList.add('open');
+    modalAbout?.classList.add('open');
   });
   document.getElementById('btn-close-about-dialog')?.addEventListener('click', () => {
-    modalAbout.classList.remove('open');
+    modalAbout?.classList.remove('open');
   });
   document.getElementById('btn-close-about')?.addEventListener('click', () => {
-    modalAbout.classList.remove('open');
+    modalAbout?.classList.remove('open');
   });
 
   // Sidebar navigation
@@ -247,7 +187,10 @@ async function fetchInitialData() {
     if (resPing.ok) {
       const pingData = await resPing.json();
       activePort = pingData.port;
-      activePortEl.textContent = activePort.toString();
+      const activePortEl = document.getElementById('active-port');
+      if (activePortEl) activePortEl.textContent = activePort.toString();
+      const settingsPortEl = document.getElementById('settings-port') as HTMLInputElement | null;
+      if (settingsPortEl) settingsPortEl.value = activePort.toString();
     }
 
     const headers: Record<string, string> = {};
@@ -371,15 +314,24 @@ function connectEventSource() {
 }
 
 function renderTable() {
+  const elTableBody = document.getElementById('table-body') as HTMLElement | null;
+  const elEmptyState = document.getElementById('empty-state') as HTMLElement | null;
+  const elCountAll = document.getElementById('count-all') as HTMLElement | null;
+  const elCountActive = document.getElementById('count-active') as HTMLElement | null;
+  const elCountComplete = document.getElementById('count-complete') as HTMLElement | null;
+  const elFooterCount = document.getElementById('footer-count') as HTMLElement | null;
+
+  if (!elTableBody) return;
+
   const items = Array.from(downloads.values());
 
   const activeCount = items.filter((i) => i.status === 'Downloading').length;
   const completeCount = items.filter((i) => i.status === 'Completed').length;
 
-  elCountAll.textContent = items.length.toString();
-  elCountActive.textContent = activeCount.toString();
-  elCountComplete.textContent = completeCount.toString();
-  elFooterCount.textContent = `${items.length} items`;
+  if (elCountAll) elCountAll.textContent = items.length.toString();
+  if (elCountActive) elCountActive.textContent = activeCount.toString();
+  if (elCountComplete) elCountComplete.textContent = completeCount.toString();
+  if (elFooterCount) elFooterCount.textContent = `${items.length} items`;
 
   const filtered = items.filter((item) => {
     if (currentCategory === 'complete') return item.status === 'Completed';
@@ -401,9 +353,9 @@ function renderTable() {
 
   if (filtered.length === 0) {
     elTableBody.innerHTML = '';
-    elEmptyState.style.display = 'flex';
+    if (elEmptyState) elEmptyState.style.display = 'flex';
   } else {
-    elEmptyState.style.display = 'none';
+    if (elEmptyState) elEmptyState.style.display = 'none';
     elTableBody.innerHTML = '';
     filtered.forEach((item) => {
       const tr = document.createElement('tr');
@@ -422,7 +374,6 @@ function renderTable() {
     });
   }
 
-  initLucide();
   updateSelectionButtons();
   updateGlobalMetrics();
 }
@@ -432,11 +383,10 @@ function updateRowLive(item: DownloadItem) {
   if (!tr) return;
 
   tr.innerHTML = getRowHtml(item);
-  initLucide();
 }
 
 function getRowHtml(item: DownloadItem): string {
-  const iconName = getFileLucideIcon(item.filename);
+  const iconSvg = getFileIconSvg(item.filename);
   const sizeStr = item.total_size ? formatBytes(item.total_size) : formatBytes(item.downloaded_bytes);
 
   let statusText = 'Complete';
@@ -466,7 +416,7 @@ function getRowHtml(item: DownloadItem): string {
   return `
     <td class="col-name">
       <div class="cell-file">
-        <i data-lucide="${iconName}"></i>
+        ${iconSvg}
         <span class="file-text" title="${escapeHtml(item.filename)}">${escapeHtml(item.filename || 'Starting download...')}</span>
       </div>
     </td>
@@ -494,6 +444,12 @@ function getInlineProgressHtml(item: DownloadItem): string {
 }
 
 function updateSelectionButtons() {
+  const btnResume = document.getElementById('btn-resume');
+  const btnStop = document.getElementById('btn-stop');
+  const btnDelete = document.getElementById('btn-delete');
+
+  if (!btnResume || !btnStop || !btnDelete) return;
+
   if (!selectedId) {
     btnResume.classList.add('disabled');
     btnStop.classList.add('disabled');
@@ -524,6 +480,9 @@ function updateSelectionButtons() {
 }
 
 function updateGlobalMetrics() {
+  const elGlobalSpeed = document.getElementById('global-speed');
+  if (!elGlobalSpeed) return;
+
   let totalSpeed = 0;
   for (const item of downloads.values()) {
     if (item.status === 'Downloading' && item.speed_bytes_per_sec) {
@@ -534,14 +493,24 @@ function updateGlobalMetrics() {
   elGlobalSpeed.textContent = totalSpeed > 0 ? `${formatBytes(totalSpeed)}/s` : '0.0 KB/s';
 }
 
-function getFileLucideIcon(filename?: string): string {
+function getFileIconSvg(filename?: string): string {
   const ext = (filename?.split('.').pop() || '').toLowerCase();
-  if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) return 'film';
-  if (['mp3', 'wav', 'flac', 'aac'].includes(ext)) return 'music';
-  if (['zip', 'rar', '7z', 'tar', 'gz', 'iso'].includes(ext)) return 'archive';
-  if (['pdf', 'doc', 'docx', 'txt', 'epub'].includes(ext)) return 'file-text';
-  if (['exe', 'msi', 'bin'].includes(ext)) return 'binary';
-  return 'file';
+  if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></svg>`;
+  }
+  if (['mp3', 'wav', 'flac', 'aac'].includes(ext)) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
+  }
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'iso'].includes(ext)) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>`;
+  }
+  if (['pdf', 'doc', 'docx', 'txt', 'epub'].includes(ext)) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>`;
+  }
+  if (['exe', 'msi', 'bin'].includes(ext)) {
+    return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="14" width="4" height="6" rx="2"/><rect x="6" y="4" width="4" height="6" rx="2"/><path d="M6 20h4"/><path d="M14 10h4"/><path d="M6 14h2v6"/><path d="M14 4h2v6"/></svg>`;
+  }
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>`;
 }
 
 function formatBytes(bytes: number): string {
@@ -584,3 +553,6 @@ function escapeHtml(text?: string): string {
 }
 
 window.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  init();
+}
