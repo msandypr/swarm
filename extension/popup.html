@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swarm Companion</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <div class="popup-header">
+      <div class="header-brand">
+        <img src="icons/icon-32.png" alt="Swarm Logo" class="popup-logo">
+        <div>
+          <h1 class="popup-title">SWARM</h1>
+          <span class="popup-subtitle">Download Interceptor</span>
+        </div>
+      </div>
+      <div class="status-pill offline" id="status-pill">
+        <span class="status-dot"></span>
+        <span id="status-text">Checking</span>
+      </div>
+    </div>
+
+    <!-- Toggle Intercept -->
+    <div class="toggle-card">
+      <div class="toggle-info">
+        <span class="toggle-title">Intercept Downloads</span>
+        <span class="toggle-desc">Automatically send browser downloads to Swarm</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="toggle-intercept" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- Connection Config -->
+    <div class="config-section">
+      <div class="field-group">
+        <label for="input-port">Daemon Port</label>
+        <input type="number" id="input-port" value="52417" min="1024" max="65535">
+      </div>
+      <div class="field-group">
+        <label for="input-token">Auth Token</label>
+        <div class="token-row">
+          <input type="password" id="input-token" placeholder="Paste token from Swarm app">
+          <button class="btn btn-sm btn-secondary" id="btn-toggle-token" title="Show/Hide">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-save">Save & Connect</button>
+    </div>
+
+    <!-- Open App -->
+    <div class="popup-footer">
+      <button class="btn btn-outline btn-block" id="btn-open-app">
+        <span>⚡ Open Swarm Desktop App</span>
+      </button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
