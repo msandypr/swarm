@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/swarm-daemon",
+    "crates/swarm-engine",
 ]
 resolver = "2"
 
