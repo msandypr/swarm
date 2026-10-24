@@ -7,6 +7,8 @@ mod tray;
 mod store;
 mod runtime;
 mod security;
+mod queue;
+mod api;
 
 use single_instance::SingleInstance;
 use tray::{open_ui, TrayManager};

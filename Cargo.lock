@@ -44,6 +44,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_path_to_error",
+ "serde_urlencoded",
  "sync_wrapper",
  "tokio",
  "tower",
@@ -943,6 +944,8 @@ name = "swarm-daemon"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "futures-util",
+ "reqwest",
  "serde",
  "serde_json",
  "swarm-engine",
