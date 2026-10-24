@@ -130,6 +130,24 @@ function setupEventListeners() {
   document.getElementById('btn-close-browsers')?.addEventListener('click', () => {
     modalBrowsers?.classList.remove('open');
   });
+  document.getElementById('btn-open-ext-folder')?.addEventListener('click', async () => {
+    try {
+      const headers: Record<string, string> = {};
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+      await fetch('/api/ext/open-folder', { method: 'POST', headers });
+    } catch (err) {
+      console.error('Failed to open extension folder:', err);
+    }
+  });
+
+  document.getElementById('btn-open-browser-page')?.addEventListener('click', () => {
+    // Open browser extensions page
+    try {
+      window.open('chrome://extensions', '_blank');
+    } catch {
+      // ignore
+    }
+  });
 
   // Settings Dialog
   const modalSettings = document.getElementById('modal-settings');

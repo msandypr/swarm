@@ -128,7 +128,7 @@
                 <th class="col-size">SIZE</th>
                 <th class="col-status">STATUS</th>
                 <th class="col-speed">SPEED</th>
-                <th class="col-eta">ETA</th>
+                <th class="col-eta">TIME LEFT</th>
                 <th class="col-date">DATE</th>
               </tr>
             </thead>
@@ -162,23 +162,22 @@
     <!-- Modal: Add URL -->
     <div class="modal-backdrop" id="modal-url">
       <div class="modal-box">
-        <div class="modal-titlebar">
-          <span>Add New Download</span>
+          <span>New Download</span>
           <button class="btn-close" id="btn-close-url-dialog">&times;</button>
         </div>
         <form id="form-new-url">
           <div class="form-row">
-            <label for="input-url">Download URL</label>
-            <textarea id="input-url" rows="3" placeholder="https://..." required></textarea>
+            <label for="input-url">File Link</label>
+            <textarea id="input-url" rows="3" placeholder="Paste link here (https://...)" required></textarea>
           </div>
           <div class="form-grid">
             <div class="form-row">
-              <label for="select-sockets">Sockets</label>
+              <label for="select-sockets">Speed Profile</label>
               <select id="select-sockets">
-                <option value="4">4 connections</option>
-                <option value="8" selected>8 connections (default)</option>
-                <option value="12">12 connections</option>
-                <option value="16">16 connections</option>
+                <option value="4">Eco (4 threads)</option>
+                <option value="8" selected>Standard (8 threads)</option>
+                <option value="12">High (12 threads)</option>
+                <option value="16">Maximum (16 threads)</option>
               </select>
             </div>
           </div>
@@ -194,17 +193,17 @@
     <div class="modal-backdrop" id="modal-settings">
       <div class="modal-box">
         <div class="modal-titlebar">
-          <span>Swarm Settings</span>
+          <span>Settings</span>
           <button class="btn-close" id="btn-close-settings-dialog">&times;</button>
         </div>
         <div class="modal-body">
           <div class="form-row">
-            <label>Daemon Port</label>
-            <input type="text" readonly value="52417" id="settings-port" />
+            <label>Save Downloads To</label>
+            <input type="text" readonly value="Downloads" />
           </div>
           <div class="form-row">
-            <label>Windows Startup</label>
-            <p class="modal-desc">Enabled via Registry HKCU Run. Toggle anytime in Windows Task Manager &rarr; Startup apps.</p>
+            <label>Startup</label>
+            <p class="modal-desc">Swarm starts in the system tray when Windows boots. You can toggle this anytime in Windows Task Manager.</p>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-secondary" id="btn-close-settings">Close</button>
@@ -216,20 +215,32 @@
     <!-- Modal: Browser Extension -->
     <div class="modal-backdrop" id="modal-browsers">
       <div class="modal-box">
-        <div class="modal-titlebar">
           <span>Browser Integration</span>
           <button class="btn-close" id="btn-close-browsers-dialog">&times;</button>
         </div>
         <div class="modal-body">
           <p class="modal-desc">
-            Swarm uses <strong>Zero-Config Auto-Pairing</strong>. Once the extension is loaded in Chrome/Edge, it connects automatically with zero manual steps.
+            Capture downloads directly from your browser with the Swarm companion extension.
           </p>
-          <p class="modal-note">Daemon listening on <code>127.0.0.1:<span id="active-port">52417</span></code></p>
+          <div class="ext-action-row">
+            <button type="button" class="btn-primary" id="btn-open-ext-folder">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              <span>Open Extension Folder</span>
+            </button>
+            <button type="button" class="btn-secondary" id="btn-open-browser-page">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+              <span>Open Browser Extensions</span>
+            </button>
+          </div>
+          <div class="ext-steps">
+            <div class="step-line"><strong>1.</strong> Turn on <em>Developer mode</em> in your browser.</div>
+            <div class="step-line"><strong>2.</strong> Click <em>Load unpacked</em> and select the opened folder.</div>
+          </div>
+          <p class="modal-note">Pairs automatically &middot; No setup needed</p>
           <div class="modal-actions">
             <button type="button" class="btn-secondary" id="btn-close-browsers">Close</button>
           </div>
         </div>
-      </div>
     </div>
 
     <!-- Modal: About -->
@@ -242,8 +253,8 @@
         <div class="modal-body text-center">
           <img src="/logo.png" alt="Swarm Logo" class="about-icon" />
           <h3 class="about-title">Swarm Download Manager</h3>
-          <p class="about-desc">Modern minimalist high-performance segmented downloader for Windows.</p>
-          <p class="about-meta">Rust Native Daemon &middot; Win32 Tray &middot; RAM &lt; 5MB</p>
+          <div class="creator-badge">Created by msandypr</div>
+          <p class="about-desc">High-performance personal download manager for Windows.</p>
           <div class="modal-actions center">
             <button type="button" class="btn-secondary" id="btn-close-about">OK</button>
           </div>

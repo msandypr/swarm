@@ -246,6 +246,21 @@ pub fn open_ui(url: &str) {
     }
 }
 
+pub fn open_folder_in_explorer(path: &str) {
+    unsafe {
+        let path_wide = to_wide(path);
+        let open_str = to_wide("open");
+        ShellExecuteW(
+            null_mut(),
+            open_str.as_ptr(),
+            path_wide.as_ptr(),
+            null(),
+            null(),
+            SW_SHOWNORMAL,
+        );
+    }
+}
+
 /// Opens the user's Downloads folder in Windows Explorer.
 pub fn open_downloads_folder() {
     let download_dir = dirs_downloads_folder();

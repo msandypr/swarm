@@ -40,6 +40,7 @@ pub fn create_router(state: AppState) -> Router {
         .route("/ext/handshake", get(handle_ext_handshake))
         .route("/downloads", get(handle_list_downloads).post(handle_add_download))
         .route("/ext/add", post(handle_ext_add))
+        .route("/ext/open-folder", post(handle_open_extension_folder))
         .route("/downloads/:id", patch(handle_action).delete(handle_delete))
         .route("/events", get(handle_events))
         .layer(middleware::from_fn_with_state(
@@ -127,6 +128,29 @@ async fn handle_ext_handshake(State(state): State<AppState>) -> impl IntoRespons
         "token": state.runtime.token,
         "port": state.runtime.port,
     }))
+}
+
+async fn handle_open_extension_folder() -> impl IntoResponse {
+    let mut ext_dir = std::path::PathBuf::from("extension");
+    if !ext_dir.exists() {
+        if let Ok(exe_path) = std::env::current_exe() {
+            if let Some(parent) = exe_path.parent() {
+                let candidate = parent.join("extension");
+                if candidate.exists() {
+                    ext_dir = candidate;
+                }
+            }
+        }
+    }
+
+    if ext_dir.exists() {
+        if let Ok(canonical) = ext_dir.canonicalize() {
+            crate::tray::open_folder_in_explorer(&canonical.to_string_lossy());
+            return Json(serde_json::json!({ "success": true, "path": canonical.to_string_lossy() }));
+        }
+    }
+
+    Json(serde_json::json!({ "success": false, "error": "Folder not found" }))
 }
 
 async fn handle_list_downloads(State(state): State<AppState>) -> impl IntoResponse {
